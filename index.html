@@ -1771,22 +1771,24 @@ async function submitSupport(event) {
         }
         
         function switchTab(viewId, element) {
-        // รายชื่อห้องทั้งหมดที่มีในบ้าน (เช็คแล้วว่ามีจริง)
+        // รายชื่อห้องทั้งหมด (ถ้าห้องไหนไม่มีจริง ระบบจะข้ามไปเอง ไม่ Error)
         const views = ['dashboard', 'swing', 'scalping', 'history', 'learning', 'support', 'settings'];
         
-        // 1. สั่งปิดไฟทุกห้องก่อน
+        // 1. สั่งซ่อนทุกห้อง (แบบปลอดภัย 100%)
         views.forEach(v => {
             const el = document.getElementById(v + '-view');
-            if (el) { // เช็คก่อนว่ามีห้องไหม (กัน Error)
+            if (el) { // เช็คก่อนว่ามีห้องไหม? ถ้ามีค่อยสั่งปิด
                 el.style.display = 'none'; 
             }
         });
 
-        // 2. เปิดไฟห้องที่เลือก
+        // 2. แสดงห้องที่เลือก
         const target = document.getElementById(viewId + '-view');
         if (target) {
-            target.style.display = 'block'; // หรือ 'flex' ตามดีไซน์เดิม
-            window.scrollTo(0, 0); // เลื่อนขึ้นบนสุด
+            target.style.display = 'block'; 
+            window.scrollTo(0, 0); 
+        } else {
+            console.log('หาห้องไม่เจอ: ' + viewId); // แค่บ่นเบาๆ แต่ไม่พัง
         }
 
         // 3. เปลี่ยนสีปุ่มเมนู
