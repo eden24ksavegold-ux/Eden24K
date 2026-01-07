@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>Eden24K AI Dashboard 🚀</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- 1. CORE THEME & LAYOUT --- */
+        :root {
+            --c-main: #6200ea; --c-sec: #2962ff; 
+            --c-success: #00c853; --c-danger: #ff1744; --c-wait: #94a3b8;
+            --bg: #f8fafc; --white: #ffffff; --sidebar: #1e293b;
+        }
+        body { font-family: 'Sarabun', sans-serif; margin: 0; background: var(--bg); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--sidebar); padding: 30px 20px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .logo { color: white; font-size: 24px; font-weight: 800; margin-bottom: 50px; }
+        .menu-item { padding: 15px 20px; margin-bottom: 10px; border-radius: 12px; cursor: pointer; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+        .menu-item:hover, .menu-item.active { background: var(--c-main); color: white; }
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; position: relative; }
+        
+        /* Sections */
+        .section-view { display: none; animation: fadeIn 0.4s ease; }
+        .section-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Dashboard Stats */
+        .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card-stat { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; }
+        .banner { border-radius: 25px; padding: 40px; color: white; margin-bottom: 25px; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+        .banner:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(98, 0, 234, 0.2); }
+
+        /* Toast Notification */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--c-success); color: white; padding: 15px 30px; border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); font-weight: bold; opacity: 0; transition: 0.4s; transform: translateY(50px); z-index: 999; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* History Items */
+        .history-item { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 5px solid #ccc; display: flex; justify-content: space-between; align-items: center; }
+
+        /* --- 2. LEARNING CENTER STYLES --- */
+        .lc-header { text-align: center; margin-bottom: 35px; }
+        .lc-title { font-size: 32px; font-weight: 800; color: #334155; margin-bottom: 15px; }
+        .lc-badges-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .lc-badge { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .lc-banner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-bottom: 35px; }
+        .lc-banner-left { background: linear-gradient(135deg, #c084fc 0%, #ffffff 100%); padding: 30px; border-radius: 30px; display: flex; align-items: center; gap: 25px; box-shadow: 0 15px 25px rgba(192,132,252,0.15); }
+        .lc-banner-right { background: white; padding: 30px; border-radius: 30px; box-shadow: 0 15px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; border: 1px solid #f1f5f9; }
+        .lc-avatar { width: 80px; height: 80px; background: #fff; border-radius: 50%; border: 4px solid #fff; position: relative; display: flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .lc-status-dot { position: absolute; bottom: 0; right: 0; width: 18px; height: 18px; background: #22c55e; border: 3px solid #fff; border-radius: 50%; }
+        .lc-search-input { width: 100%; padding: 14px 20px; border-radius: 15px; border: 1px solid #e2e8f0; outline: none; background: #f8fafc; font-family: 'Sarabun'; box-sizing: border-box; }
+        .lc-filter-section { margin-bottom: 35px; }
+        .lc-filter-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; }
+        .lc-select { padding: 14px; border-radius: 15px; border: 1px solid #e2e8f0; background: white; font-family: 'Sarabun'; outline: none; color: #64748b; width: 100%; box-sizing: border-box; }
+        .lc-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+        .lc-card { background: white; padding: 25px; border-radius: 30px; box-shadow: 0 5px 10px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; display: flex; flex-direction: column; justify-content: space-between; min-height: 300px; transition: 0.3s; }
+        .lc-card:hover { transform: translateY(-7px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+        .lc-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .lc-card-title { margin: 0; font-size: 20px; color: #1e293b; font-weight: 700; }
+        .lc-card-subtitle { margin: 5px 0 0 0; font-size: 12px; color: #94a3b8; }
+        .lc-cat-icon { font-size: 14px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .lc-inner-box { padding: 20px; border-radius: 20px; margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .lc-progress-row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+        .lc-progress-bar { height: 8px; flex-grow: 1; border-radius: 5px; background: #e2e8f0; overflow: hidden; }
+        .lc-progress-fill { height: 100%; border-radius: 5px; }
+        .lc-footer { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #94a3b8; font-weight: 500; }
+        .lc-btn-purple { background: #7c3aed; color: white; border: none; padding: 10px 24px; border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .lc-btn-purple:hover { background: #6d28d9; }
+        .lc-btn-unlock-sm { background: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 12px; font-size: 12px; cursor: pointer; font-weight: 600; }
+        .lc-btn-premium { width: 100%; background: #7c3aed; color: white; border: none; padding: 14px; border-radius: 18px; font-size: 14px; cursor: pointer; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); }
+
+        /* --- 3. NEW TRADE UI STYLES (PRO DESIGN) --- */
+        .trade-header-title { font-size: 24px; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .trade-desc { color: #64748b; margin-bottom: 20px; font-size: 14px; margin-top: 0; }
+        .warning-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 15px; display: flex; gap: 15px; align-items: flex-start; margin-bottom: 30px; }
+        .warning-icon { font-size: 20px; color: #d97706; margin-top: 2px; }
+        .warning-text { font-size: 12px; color: #92400e; line-height: 1.5; margin: 0; }
+        .trade-layout-grid { display: grid; grid-template-columns: 2.2fr 1fr; gap: 25px; align-items: start; }
+        .chart-container-new { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .upload-zone { display: flex; align-items: center; justify-content: center; border-radius: 15px; overflow: hidden; cursor: pointer; }
+        .control-bar { margin-top: 20px; display: flex; gap: 15px; align-items: center; }
+        .tf-select-new { flex-grow: 1; padding: 12px 15px; border-radius: 10px; border: 1px solid #cbd5e1; font-family: 'Sarabun'; font-size: 14px; outline: none; background: white; }
+        .analyze-btn-new { background: #7c3aed; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .analyze-btn-new:hover { background: #6d28d9; transform: translateY(-2px); }
+        .side-panel { display: flex; flex-direction: column; gap: 20px; }
+        .calc-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .calc-title { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px; }
+        .calc-label { font-size: 12px; color: #64748b; margin-bottom: 5px; display: block; font-weight: 600; }
+        .calc-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-family: 'Sarabun'; margin-bottom: 15px; box-sizing: border-box; font-size: 14px; }
+        .calc-result-row { background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; text-align: center; margin-top: 5px; }
+        .guide-box { background: #f3e8ff; border-radius: 20px; padding: 20px; border: 1px solid #e9d5ff; }
+        .guide-item { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+        .guide-icon { width: 24px; height: 24px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #7c3aed; flex-shrink: 0; font-weight: bold; }
+        .guide-text { font-size: 11px; color: #581c87; line-height: 1.4; margin: 3px 0 0 0; }
+        
+        /* Result UI */
+        .signal-box { padding: 15px; border-radius: 15px; text-align: center; font-weight: 800; font-size: 28px; margin-top: 20px; display: none; }
+        .prob-box { margin-top: 10px; padding: 8px; background: #f1f5f9; border-radius: 10px; text-align: center; font-weight: 600; color: #64748b; font-size: 14px; display: none; }
+        .res-img { width: 100%; border-radius: 15px; margin-top: 15px; border: 2px solid #e2e8f0; display: none; }
+
+        /* ========================================= */
+        /* 💎 PREMIUM UPGRADE MODAL DESIGN */
+        /* ========================================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s; }
+        .modal-overlay.open { display: flex; opacity: 1; }
+        
+        .premium-card-box { background: white; width: 90%; max-width: 800px; border-radius: 30px; overflow: hidden; display: flex; box-shadow: 0 25px 50px rgba(0,0,0,0.2); animation: scaleIn 0.3s ease; }
+        .premium-left { background: linear-gradient(135deg, #6200ea, #b388ff); padding: 40px; color: white; flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; }
+        .premium-right { padding: 40px; flex: 1.2; display: flex; flex-direction: column; }
+        
+        .feature-list { list-style: none; padding: 0; margin: 20px 0; }
+        .feature-item { display: flex; gap: 10px; margin-bottom: 15px; font-size: 14px; align-items: center; }
+        .check-icon { background: rgba(255,255,255,0.2); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+        
+        .price-tag { font-size: 48px; font-weight: 800; color: #1e293b; margin-bottom: 5px; }
+        .price-sub { font-size: 14px; color: #64748b; margin-bottom: 30px; }
+        
+        .btn-upgrade-confirm { background: #6200ea; color: white; border: none; padding: 15px; border-radius: 15px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; box-shadow: 0 10px 20px rgba(98, 0, 234, 0.3); }
+        .btn-upgrade-confirm:hover { background: #5a00d6; transform: translateY(-2px); }
+        .btn-close-modal { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; }
+        
+        @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* Premium Badge Animation */
+        .premium-active-badge { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(90deg, #FFD700, #FFA500); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; box-shadow: 0 2px 10px rgba(255, 215, 0, 0.4); }    
+
+       /* ========================================= */
+        /* ⚙️ SETTINGS PAGE STYLES (NEW) */
+        /* ========================================= */
+        .settings-header { margin-bottom: 25px; }
+        .settings-tabs { display: flex; gap: 10px; border-bottom: 1px solid #e2e8f0; margin-bottom: 30px; }
+        .set-tab-btn { padding: 12px 20px; background: none; border: none; font-family: 'Sarabun'; font-size: 14px; color: #64748b; cursor: pointer; font-weight: 600; border-bottom: 2px solid transparent; transition: 0.3s; display: flex; gap: 8px; align-items: center; }
+        .set-tab-btn:hover { color: #6200ea; }
+        .set-tab-btn.active { color: #6200ea; border-bottom-color: #6200ea; }
+        
+        .settings-card { background: white; border: 1px solid #e2e8f0; border-radius: 15px; padding: 30px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .set-section-title { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 5px 0; }
+        .set-section-desc { font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; }
+        
+        .avatar-area { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+        .avatar-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #f1f5f9; }
+        .btn-upload { background: white; border: 1px solid #cbd5e1; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #475569; font-weight: 600; transition: 0.2s; }
+        .btn-upload:hover { background: #f8fafc; border-color: #94a3b8; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+        .form-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; font-family: 'Sarabun'; font-size: 14px; box-sizing: border-box; transition: 0.3s; color: #334155; }
+        .form-input:focus { outline: none; border-color: #6200ea; box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.1); }
+        
+        .btn-save-settings { background: #6200ea; color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-save-settings:hover { background: #5a00d6; }
+        .btn-cancel { background: white; border: 1px solid #e2e8f0; color: #64748b; padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; margin-left: 10px; }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #6200ea; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        /* --- ⚫ DARK MODE ADD-ON (วางต่อท้ายใน <style> ได้เลย) --- */
+        [data-theme="dark"] body { background-color: #0f172a !important; color: #f1f5f9 !important; }
+        [data-theme="dark"] .sidebar { background-color: #020617 !important; border-right: 1px solid #334155; }
+        
+        /* เปลี่ยนสีกล่องทุกใบ */
+        [data-theme="dark"] .card-stat, 
+        [data-theme="dark"] .lc-card, 
+        [data-theme="dark"] .calc-card, 
+        [data-theme="dark"] .history-item, 
+        [data-theme="dark"] .settings-card, 
+        [data-theme="dark"] .chart-container-new,
+        [data-theme="dark"] .banner,
+        [data-theme="dark"] #history-list-container { 
+            background-color: #1e293b !important; 
+            color: #f1f5f9 !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+        }
+
+        /* เปลี่ยนสีตัวหนังสือ */
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+        [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] strong, 
+        [data-theme="dark"] b, [data-theme="dark"] .lc-card-title,
+        [data-theme="dark"] .trade-header-title { 
+            color: #f1f5f9 !important; 
+        }
+        
+        [data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div,
+        [data-theme="dark"] .text-muted, [data-theme="dark"] .trade-desc { 
+            color: #cbd5e1 !important; 
+        }
+
+        /* เปลี่ยนสีช่องกรอกข้อมูล */
+        [data-theme="dark"] input, [data-theme="dark"] select, 
+        [data-theme="dark"] .lc-search-input, [data-theme="dark"] .calc-result-row {
+            background-color: #0f172a !important;
+            color: #fff !important;
+            border-color: #334155 !important;
+        }
+        
+        /* เปลี่ยนสี Warning Box */
+        [data-theme="dark"] .warning-box { background-color: #451a03 !important; border-color: #d97706 !important; }
+        [data-theme="dark"] .warning-text { color: #fbbf24 !important; }
+        /* --- 🌓 ปุ่มลอย & ธีมมืด (วางต่อท้ายใน <style>) --- */
+    
+    /* 1. ปุ่มลอยมุมขวาล่าง */
+    .theme-float-btn {
+        position: fixed; 
+        bottom: 30px; 
+        right: 30px;
+        width: 60px; 
+        height: 60px; 
+        border-radius: 50%;
+        background: #6200ea; 
+        color: white;
+        border: none; 
+        font-size: 24px; 
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(98, 0, 234, 0.4); 
+        z-index: 9999;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+    .theme-float-btn:hover { transform: scale(1.1); }
+
+    /* 2. บังคับโหมดมืด (Dark Mode Overrides) */
+    [data-theme="dark"] body { background-color: #0f172a !important; color: #f1f5f9 !important; }
+    [data-theme="dark"] .sidebar { background-color: #020617 !important; border-right: 1px solid #334155 !important; }
+    
+    /* เปลี่ยนสีกล่องทุกใบให้เป็นสีมืด */
+    [data-theme="dark"] .card-stat, 
+    [data-theme="dark"] .lc-card, 
+    [data-theme="dark"] .calc-card, 
+    [data-theme="dark"] .history-item, 
+    [data-theme="dark"] .settings-card, 
+    [data-theme="dark"] .chart-container-new,
+    [data-theme="dark"] .banner,
+    [data-theme="dark"] #history-list-container,
+    [data-theme="dark"] .warning-box,
+    [data-theme="dark"] input, 
+    [data-theme="dark"] select { 
+        background-color: #1e293b !important; 
+        color: #f1f5f9 !important; /* บังคับตัวหนังสือขาว */
+        border: 1px solid #334155 !important;
+        box-shadow: none !important;
+    }
+
+    /* 3. 🔦 แก้ปัญหาตัวหนังสือเปลี่ยนสี (บังคับให้ชัด) */
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+    [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] strong, 
+    [data-theme="dark"] b, [data-theme="dark"] span, [data-theme="dark"] div { 
+        color: #f1f5f9 !important; /* สีขาวสว่าง */
+    }
+    
+    /* ยกเว้นพวกตัวหนังสือสีจางๆ ให้เป็นสีเทาสว่าง */
+    [data-theme="dark"] .text-muted, 
+    [data-theme="dark"] p,
+    [data-theme="dark"] .trade-desc { 
+        color: #cbd5e1 !important; 
+    }
+   /* --- 🏴‍☠️ FORCE DARK MODE: บังคับเปลี่ยนพื้นหลัง (วางต่อท้ายสุดใน style) --- */
+
+    /* 1. บังคับพื้นหลังหลัก (Main Background) ให้ดำ */
+    [data-theme="dark"] .section-view, 
+    [data-theme="dark"] .main-content,
+    [data-theme="dark"] div[style*="background:#f3f4f6"], 
+    [data-theme="dark"] div[style*="background:#f9fafb"],
+    [data-theme="dark"] div[style*="background:#f0f9ff"] {
+        background-color: #0f172a !important; /* สีน้ำเงินดำเข้ม */
+        color: #f1f5f9 !important;
+    }
+
+    /* 2. บังคับกล่องต่างๆ (Cards) ให้เป็นสีเทาเข้ม */
+    [data-theme="dark"] div[style*="background:white"],
+    [data-theme="dark"] div[style*="background: white"],
+    [data-theme="dark"] .card-stat,
+    [data-theme="dark"] .history-item {
+        background-color: #1e293b !important; /* สีเทาเข้ม */
+        border: 1px solid #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* 3. เก็บตกตัวหนังสือที่ยังมืดอยู่ ให้สว่างขึ้น */
+    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+    [data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] div {
+        color: #f1f5f9 !important;
+    }
+    
+    /* ยกเว้นตัวหนังสือสีเทา (เช่น วันที่) ให้เป็นสีเทาสว่าง */
+    [data-theme="dark"] .text-muted, 
+    [data-theme="dark"] span[style*="color:#64748b"],
+    [data-theme="dark"] div[style*="color:#64748b"] {
+        color: #94a3b8 !important;
+    }
+   /* --- 🎨 FIX: แก้สีกล่องสถิติ & คู่มือ ให้ชัดในโหมดมืด (วางต่อท้ายสุด) --- */
+
+    /* 1. กล่องสีฟ้า (Analysis) -> เปลี่ยนเป็นน้ำเงินเข้ม */
+    [data-theme="dark"] div[style*="background:#e0f2fe"] {
+        background-color: #172554 !important; /* น้ำเงินลึก */
+        border: 1px solid #1e40af !important;
+    }
+    [data-theme="dark"] div[style*="color:#0369a1"], 
+    [data-theme="dark"] div[style*="color:#0c4a6e"] { color: #bfdbfe !important; } /* ปรับสีตัวหนังสือ */
+
+    /* 2. กล่องสีเขียว (Win) -> เปลี่ยนเป็นเขียวเข้ม */
+    [data-theme="dark"] div[style*="background:#dcfce7"] {
+        background-color: #052e16 !important; /* เขียวลึก */
+        border: 1px solid #15803d !important;
+    }
+    [data-theme="dark"] div[style*="color:#15803d"], 
+    [data-theme="dark"] div[style*="color:#14532d"] { color: #86efac !important; }
+
+    /* 3. กล่องสีแดง/ส้ม (Loss) -> เปลี่ยนเป็นแดงเข้ม */
+    [data-theme="dark"] div[style*="background:#fee2e2"], 
+    [data-theme="dark"] div[style*="background:#fff7ed"] {
+        background-color: #450a0a !important; /* แดงลึก */
+        border: 1px solid #991b1b !important;
+    }
+    [data-theme="dark"] div[style*="color:#b91c1c"], 
+    [data-theme="dark"] div[style*="color:#7f1d1d"],
+    [data-theme="dark"] div[style*="color:#c2410c"],
+    [data-theme="dark"] div[style*="color:#7c2d12"] { color: #fca5a5 !important; }
+
+    /* 4. กล่องสีม่วง (Rate/Guide) -> เปลี่ยนเป็นม่วงเข้ม */
+    [data-theme="dark"] div[style*="background:#f3e8ff"],
+    [data-theme="dark"] .guide-box {
+        background-color: #3b0764 !important; /* ม่วงลึก */
+        border: 1px solid #6b21a8 !important;
+    }
+    [data-theme="dark"] div[style*="color:#7e22ce"], 
+    [data-theme="dark"] div[style*="color:#581c87"] { color: #d8b4fe !important; }
+
+    /* 5. เก็บตกกล่องอื่นๆ ที่ใช้สีอ่อน */
+    [data-theme="dark"] span[style*="background:#e0e7ff"],
+    [data-theme="dark"] span[style*="background:#ede9fe"] {
+        background-color: #1e1b4b !important; /* พื้นหลังป้ายวันที่ */
+        color: #c7d2fe !important;
+    }
+   /* --- 🎓 FIX: แก้สีป้ายในศูนย์การเรียนรู้ (Learning Badges) --- */
+
+    /* 1. ป้ายสีเทา (พื้นฐาน, เทคนิคอล) -> เปลี่ยนเป็นเทาเข้ม */
+    [data-theme="dark"] span[style*="background:#f3f4f6"] {
+        background-color: #334155 !important; /* เทาเข้ม */
+        color: #e2e8f0 !important; /* ตัวหนังสือขาว */
+    }
+
+    /* 2. ป้ายสีฟ้า (ยอดนิยม, ใหม่) -> เปลี่ยนเป็นน้ำเงินเข้ม */
+    [data-theme="dark"] span[style*="background:#e0f2fe"] {
+        background-color: #172554 !important; /* น้ำเงินลึก */
+        color: #93c5fd !important; /* ฟ้าสว่าง */
+    }
+
+    /* 3. ป้ายสีเขียว (แนะนำ, ฟรี) -> เปลี่ยนเป็นเขียวเข้ม */
+    [data-theme="dark"] span[style*="background:#dcfce7"] {
+        background-color: #064e3b !important; /* เขียวลึก */
+        color: #6ee7b7 !important; /* เขียวสว่าง */
+    }
+
+    /* 4. ป้ายสีม่วง (Mindset, AI Tutor) -> เปลี่ยนเป็นม่วงเข้ม */
+    [data-theme="dark"] span[style*="background:#f3e8ff"],
+    [data-theme="dark"] span[style*="background:#ede9fe"] {
+        background-color: #581c87 !important; /* ม่วงลึก */
+        color: #e9d5ff !important; /* ม่วงสว่าง */
+    }
+
+    /* 5. ป้ายสีส้ม (พรีเมียม, สำคัญ) -> เปลี่ยนเป็นส้มเข้ม */
+    [data-theme="dark"] span[style*="background:#ffedd5"],
+    [data-theme="dark"] span[style*="background:#fffbeb"] {
+        background-color: #7c2d12 !important; /* ส้มน้ำตาล */
+        color: #fdba74 !important; /* ส้มสว่าง */
+    }
+   </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="logo">Eden24K <span>AI</span> 🚀</div>
+        <div class="menu-item active" onclick="switchTab('dashboard', this)">🎫 แดชบอร์ด</div>
+        <div class="menu-item" onclick="switchTab('swing', this)">📈 สวิงเทรด</div>
+        <div class="menu-item" onclick="switchTab('scalping', this)">⏱️ เก็งกำไร</div>
+        <div class="menu-item" onclick="switchTab('history', this)">📊 ประวัติการค้า</div>
+        <div class="menu-item" onclick="switchTab('learning', this)">🎓 ศูนย์การเรียนรู้</div>
+        <div class="menu-item" onclick="switchTab('support', this)">📨 การสนับสนุน</div>
+        
+        <div class="menu-item" onclick="switchTab('settings', this)">⚙️ การตั้งค่า</div>
+        
+        <div style="margin-top:auto;"><button onclick="logout()" style="width:100%; padding:10px; border-radius:10px; background:rgba(255,255,255,0.1); color:white; border:none; cursor:pointer;">ออกจากระบบ</button></div>
+    </nav>
+
+   <main class="main-content"> 
+
+    <div id="dashboard-view" class="section-view" style="display:block; width: 100%; min-height: 100vh; background-color: var(--db-bg-main, #f8fafc); padding: 40px; box-sizing: border-box; font-family: 'Sarabun', sans-serif;">
+        <style>
+            #dashboard-view {
+                --db-bg-main: #f8fafc; --db-text-main: #1e293b; --db-text-sub: #64748b; --db-card-bg: #ffffff; --db-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            }
+            body[data-theme="dark"] #dashboard-view {
+                --db-bg-main: #0f172a; --db-text-main: #f1f5f9; --db-text-sub: #94a3b8; --db-card-bg: #1e293b; --db-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
+            }
+            .pro-card { background: var(--db-card-bg); border-radius: 16px; padding: 24px; box-shadow: var(--db-shadow); border: 1px solid rgba(128,128,128,0.1); transition: transform 0.2s; }
+            .pro-card:hover { transform: translateY(-3px); }
+            .hero-banner { background: linear-gradient(135deg, #6200ea 0%, #9044ff 100%); border-radius: 20px; padding: 30px; color: white; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(98, 0, 234, 0.3); }
+        </style>
+
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div class="hero-banner">
+                <div>
+                    <h1 style="margin:0; font-size:32px; font-weight:800;">สวัสดีตอนเย็นครับกูรูร็อค! 👋</h1>
+                    <p style="margin:5px 0 0 0; opacity:0.9;">ศูนย์บัญชาการซื้อขายระบบ AI อัจฉริยะ</p>
+                </div>
+                <div style="text-align:right; background:rgba(0,0,0,0.2); padding:10px 20px; border-radius:12px; backdrop-filter: blur(5px);">
+                    <div id="live-clock-date" style="font-size: 14px; opacity: 0.9; margin-bottom: 2px;">กำลังโหลด...</div>
+                    <div id="live-clock-time" style="font-size: 24px; font-weight: 700;">--:--:--</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                <div class="pro-card">
+                    <h3 style="margin:0; color:var(--db-text-main);">📈 สวิงเทรด (H4/D1)</h3>
+                    <p style="color:var(--db-text-sub); font-size:13px; margin:5px 0 15px 0;">วิเคราะห์จุดกลับตัวระยะกลาง</p>
+                    <button onclick="switchTab('swing')" style="width:100%; padding:12px; background:#4338ca; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">วิเคราะห์กราฟ 🚀</button>
+                </div>
+                <div class="pro-card">
+                    <h3 style="margin:0; color:var(--db-text-main);">⚡ Scalping (M5)</h3>
+                    <p style="color:var(--db-text-sub); font-size:13px; margin:5px 0 15px 0;">จับจังหวะสั้น ทำกำไรไว</p>
+                    <button onclick="switchTab('scalping')" style="width:100%; padding:12px; background:#db2777; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">วิเคราะห์กราฟ ⚡</button>
+                </div>
+            </div>
+
+            <div class="pro-card" style="padding:20px; margin-bottom:30px;">
+                <div style="margin-bottom:20px; display:flex; gap:12px; overflow-x:auto; padding-bottom:10px;">
+                    <button onclick="changeChart('OANDA:XAUUSD')" style="background: linear-gradient(135deg, #fbbf24, #d97706); color: white; border: none; padding: 8px 16px; border-radius: 12px; cursor: pointer; font-weight:700;">🥇 ทองคำ</button>
+                    <button onclick="changeChart('BITSTAMP:BTCUSD')" style="background: linear-gradient(135deg, #f7931a, #c27614); color: white; border: none; padding: 8px 16px; border-radius: 12px; cursor: pointer; font-weight:700;">₿ Bitcoin</button>
+                    <button onclick="changeChart('FX:EURUSD')" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 8px 16px; border-radius: 12px; cursor: pointer; font-weight:700;">💶 EUR/USD</button>
+                </div>
+                <div id="tradingview-container" style="height:550px; border-radius:12px; overflow:hidden;"></div>
+            </div>
+            
+            <h3 style="color:var(--db-text-main); margin-bottom:20px;">เครื่องมือและสถานะ</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div class="pro-card" onclick="switchTab('learning')" style="cursor:pointer; text-align:center;"><div style="font-size:30px;">🎓</div><div style="color:var(--db-text-main); font-weight:600;">ศูนย์การเรียนรู้</div></div>
+                <div class="pro-card" onclick="switchTab('settings')" style="cursor:pointer; text-align:center;"><div style="font-size:30px;">⚙️</div><div style="color:var(--db-text-main); font-weight:600;">ตั้งค่าระบบ</div></div>
+                <div class="pro-card" onclick="switchTab('support')" style="cursor:pointer; text-align:center;"><div style="font-size:30px;">📨</div><div style="color:var(--db-text-main); font-weight:600;">แจ้งปัญหา/สนับสนุน</div></div>
+                
+            </div>
+            
+        </div>
+        
+        <script>
+            function changeChart(symbol){
+                document.getElementById('tradingview-container').innerHTML='';
+                const sc=document.createElement('script');
+                sc.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+                sc.async=true;
+                sc.innerHTML=JSON.stringify({
+                    "autosize":true,"symbol":symbol,"interval":"240","timezone":"Asia/Bangkok","theme":"dark","style":"1","locale":"th_TH","backgroundColor":"rgba(19, 23, 34, 1)"
+                });
+                document.getElementById('tradingview-container').appendChild(sc);
+            }
+            setTimeout(()=>changeChart('OANDA:XAUUSD'),500);
+
+            function updateClock() {
+                const now = new Date();
+                const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+                const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                
+                if(document.getElementById('live-clock-date')){
+                    document.getElementById('live-clock-date').innerText = `วัน ${days[now.getDay()]}ที่ ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+                    document.getElementById('live-clock-time').innerText = `เวลา ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')} น.`;
+                }
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+        </script>
+    </div>
+
+    <div id="support-view" class="section-view" style="display:none; width: 100%; min-height: 100vh; background-color: var(--db-bg-main, #f8fafc); padding: 40px; box-sizing: border-box; font-family: 'Sarabun', sans-serif;">
+        <style>
+            .sup-label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--db-text-main); font-size: 14px; }
+            .sup-input, .sup-select, .sup-textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; color: #1e293b; outline: none; box-sizing: border-box; }
+            body[data-theme="dark"] .sup-input, body[data-theme="dark"] .sup-select, body[data-theme="dark"] .sup-textarea { background: #334155; border-color: #475569; color: #f1f5f9; }
+        </style>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <div style="margin-bottom: 30px;">
+                <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: var(--db-text-main);">💬 การสนับสนุนและข้อเสนอแนะ</h1>
+                <p style="color: var(--db-text-sub);">เราพร้อมช่วยเหลือคุณในทุกปัญหา</p>
+            </div>
+            <div class="pro-card" style="padding: 40px;">
+                <form onsubmit="submitSupport(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label class="sup-label">เหตุผลในการติดต่อ *</label>
+                        <select class="sup-select" required>
+                            <option value="" disabled selected>เลือกเหตุผล...</option>
+                            <option value="bug">รายงานข้อผิดพลาด</option>
+                            <option value="billing">ปัญหาการชำระเงิน</option>
+                            <option value="general">ข้อเสนอแนะทั่วไป</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label class="sup-label">อีเมลของคุณ *</label>
+                        <input type="email" class="sup-input" value="brflove156@gmail.com" required>
+                    </div>
+                    <div style="margin-bottom: 30px;">
+                        <label class="sup-label">ข้อความรายละเอียด *</label>
+                        <textarea class="sup-textarea" rows="5" placeholder="พิมพ์รายละเอียดที่นี่..." required></textarea>
+                    </div>
+                    <button type="submit" style="width: 100%; background: #6200ea; color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(98, 0, 234, 0.3);">ส่งคำขอความช่วยเหลือ 🚀</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="swing-view" class="section-view">
+        <div class="trade-header-title">🟣 การซื้อขายแบบสวิงเทรด (Swing Trade)</div>
+        <p class="trade-desc">วิเคราะห์กราฟเพื่อหาโอกาสในการซื้อขายในระยะเวลาหลายวันถึงหลายสัปดาห์</p>
+        
+        <div class="warning-box">
+            <div class="warning-icon">⚠️</div>
+            <p class="warning-text"><strong>สำคัญ:</strong> การวิเคราะห์ทั้งหมดมีวัตถุประสงค์เพื่อการศึกษาเท่านั้น</p>
+        </div>
+
+        <div class="trade-layout-grid">
+            <div class="chart-container-new">
+                <label for="sw-file" class="upload-zone" style="min-height: 450px; background:#0f172a;">
+                    <img id="sw-preview" style="display:none; max-width:100%; max-height:100%; object-fit:contain;" />
+                    <div id="sw-placeholder" style="color:#94a3b8; text-align:center;">
+                        <div style="font-size:40px; margin-bottom:10px;">📊</div>
+                        คลิกเพื่ออัปโหลดรูปกราฟของคุณ
+                    </div>
+                </label>
+                <input type="file" id="sw-file" hidden accept="image/*" />
+                
+                <div class="control-bar">
+                    <select id="sw-tf" class="tf-select-new">
+                        <option value="1H">1 ชั่วโมง (1 Hours)</option>
+                        <option value="4H">4 ชั่วโมง (4 Hours)</option>
+                        <option value="1D">รายวัน (Daily)</option>
+                        <option value="1W">รายสัปดาห์ (Weekly)</option>
+                    </select>
+                    <button class="analyze-btn-new" onclick="analyze('swing')">วิเคราะห์แผนภูมิ 🚀</button>
+                </div>
+
+               <div id="sw-result-container" style="display:none; margin-top:25px; background:var(--sw-res-bg, #f8fafc); border-radius:15px; padding:30px; text-align:center; border: 1px solid rgba(0,0,0,0.05);">
+    <style>
+        /* บังคับสีตัวหนังสือให้ชัดเจนในทุกโหมด */
+        .res-title-fix { color: #1e293b; font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        #sw-signal-box { color: #1e293b; font-size: 48px; font-weight: 800; margin: 10px 0; }
+        #sw-prob-box { color: #64748b; font-size: 18px; font-weight: 600; }
+        #sw-res { margin-top: 15px; font-size: 14px; color: #334155; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 10px; }
+
+        /* 🌙 ปรับสีสำหรับโหมดมืด */
+        body[data-theme="dark"] #sw-result-container { --sw-res-bg: #1e293b; border-color: rgba(255,255,255,0.1); }
+        body[data-theme="dark"] .res-title-fix { color: #f8fafc; }
+        body[data-theme="dark"] #sw-signal-box { color: #fbbf24 !important; } /* สีส้มทองเด่นๆ */
+        body[data-theme="dark"] #sw-prob-box { color: #cbd5e1; }
+        body[data-theme="dark"] #sw-res { color: #e2e8f0; background: rgba(0,0,0,0.2); }
+    </style>
+
+    <div class="res-title-fix">⚡ ผลการวิเคราะห์ด่วน</div>
+    <div id="sw-signal-box" class="signal-box">WAITING...</div>
+    <div id="sw-prob-box" class="prob-box">Confidence: 0%</div>
+    <div id="sw-res">รายละเอียดแผนการเทรดจะปรากฏที่นี่...</div>
+</div>
+
+            <div class="side-panel">
+                <div class="calc-card">
+                    <h4 class="calc-title">🧮 เครื่องคำนวณก่อนเทรด</h4>
+                    <p style="font-size:11px; color:#7c3aed; margin-bottom:15px;">สูตร: (ทุน x %เสี่ยง) / ระยะ SL</p>
+                    <label class="calc-label">ยอดคงเหลือในบัญชี ($)</label>
+                    <input type="number" id="sw-balance" class="calc-input" value="1000" oninput="calculateLot('sw')">
+                    <label class="calc-label">ความเสี่ยง (%)</label>
+                    <input type="number" id="sw-risk" class="calc-input" value="1" oninput="calculateLot('sw')">
+                    <label class="calc-label">ระยะ SL (Points)</label>
+                    <input type="number" id="sw-sl" class="calc-input" placeholder="เช่น 200, 500" oninput="calculateLot('sw')">
+                    <div class="calc-result-row">
+                        <span style="font-size:12px; color:#64748b;">ขนาด Lot ที่แนะนำ:</span>
+                        <div id="sw-lot-result" style="font-weight:bold; font-size:24px; color:#7c3aed;">0.00 Lot</div>
+                    </div>
+                </div>
+                <div class="guide-box">
+                    <h4 class="calc-title" style="color:#581c87; margin-bottom:10px;">ℹ️ คู่มือ</h4>
+                    <div class="guide-item"><div class="guide-icon">1</div><p class="guide-text">อัปโหลดภาพกราฟ</p></div>
+                    <div class="guide-item"><div class="guide-icon">2</div><p class="guide-text">กดปุ่มวิเคราะห์</p></div>
+                    <div class="guide-item"><div class="guide-icon">3</div><p class="guide-text">ดูผลลัพธ์ด้านซ้าย</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="scalping-view" class="section-view">
+        <div class="trade-header-title">🔵 เก็งกำไรระยะสั้น (Scalping)</div>
+        <p class="trade-desc">วิเคราะห์กราฟเพื่อหาโอกาสทำกำไรเร็วภายในไม่กี่นาที</p>
+        
+        <div class="warning-box" style="background:#f0f9ff; border-color:#bae6fd;">
+            <div class="warning-icon" style="color:#0284c7;">⚡</div>
+            <p class="warning-text" style="color:#075985;"><strong>โหมดความเร็วสูง:</strong> ควรตั้ง Stop Loss ทุกครั้ง</p>
+        </div>
+
+        <div class="trade-layout-grid">
+            <div class="chart-container-new">
+                <label for="sc-file" class="upload-zone" style="min-height: 450px; background:#0f172a;">
+                    <img id="sc-preview" style="display:none; max-width:100%; max-height:100%; object-fit:contain;" />
+                    <div id="sc-placeholder" style="color:#94a3b8; text-align:center;">
+                        <div style="font-size:40px; margin-bottom:10px;">⚡</div>
+                        คลิกเพื่ออัปโหลดกราฟ 1M-15M
+                    </div>
+                </label>
+                <input type="file" id="sc-file" hidden accept="image/*" />
+                
+                <div class="control-bar">
+                    <select id="sc-tf" class="tf-select-new">
+                        <option value="1M">1 นาที (1 Min)</option>
+                        <option value="5M">5 นาที (5 Mins)</option>
+                        <option value="15M">15 นาที (15 Mins)</option>
+                        <option value="30M">30 นาที (30 Mins)</option>
+                    </select>
+                    <button class="analyze-btn-new" onclick="analyze('scalp')" style="background:#0284c7;">วิเคราะห์ด่วน ⚡</button>
+                </div>
+
+                <div id="sc-result-container" style="display:none; margin-top:25px; background:#f8fafc; border-radius:15px; padding:20px; border:1px solid #e2e8f0; animation:fadeIn 0.5s;">
+                    <h4 style="margin:0 0 10px 0; color:#1e293b;">⚡ ผลการวิเคราะห์ด่วน</h4>
+                    <div id="sc-signal-box" class="signal-box" style="margin-top:0;">WAITING...</div>
+                    <div id="sc-prob-box" class="prob-box">Confidence: 0%</div>
+                    <div id="sc-res" style="margin-top:15px; font-size:14px; color:#334155; line-height:1.6;"></div>
+                </div>
+            </div>
+
+            <div class="side-panel">
+                <div class="calc-card">
+                    <h4 class="calc-title">🚀 Scalping Calculator</h4>
+                    <label class="calc-label">เงินทุน ($)</label>
+                    <input type="number" id="sc-balance" class="calc-input" value="500" oninput="calculateLot('sc')">
+                    <label class="calc-label">ความเสี่ยง (%)</label>
+                    <input type="number" id="sc-risk" class="calc-input" value="2" oninput="calculateLot('sc')">
+                    <label class="calc-label">ระยะ SL (Pips)</label>
+                    <input type="number" id="sc-sl" class="calc-input" placeholder="เช่น 10-20" oninput="calculateLot('sc')">
+                    <div class="calc-result-row" style="background:#f0f9ff; border-color:#bae6fd;">
+                        <span style="font-size:12px; color:#64748b;">Max Lot Size:</span>
+                        <div id="sc-lot-result" style="font-weight:bold; font-size:24px; color:#0284c7;">0.00 Lot</div>
+                    </div>
+                    <div class="guide-box" style="margin-top: 20px;">
+                    <h4 class="calc-title" style="color:#581c87; margin-bottom:10px;">ℹ️ คู่มือ</h4>
+                    <div class="guide-item"><div class="guide-icon">1</div><p class="guide-text">อัปโหลดภาพกราฟ (TF 1M-15M)</p></div>
+                    <div class="guide-item"><div class="guide-icon">2</div><p class="guide-text">กดปุ่ม "วิเคราะห์ด่วน"</p></div>
+                    <div class="guide-item"><div class="guide-icon">3</div><p class="guide-text">ดูผลลัพธ์ & ตั้ง SL ทันที</p></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<div id="history-view" class="section-view" style="padding:30px; background:#f0f9ff; min-height:100vh;">
+        
+        <div style="text-align:center; margin-bottom:30px;">
+            <h1 style="color:#6200ea; font-size:32px; font-weight:bold; margin-bottom:10px; margin-top:0;">ประวัติการค้า</h1>
+            <p style="color:#64748b; font-size:16px;">ทบทวนเส้นทางการซื้อขายของคุณ วิเคราะห์รูปแบบ และติดตามความคืบหน้าของ<br>คุณด้วยข้อมูลเชิงลึกโดยละเอียด</p>
+        </div>
+
+        <div style="background:white; padding:25px; border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,0.03); margin-bottom:20px;">
+            <div style="font-weight:bold; font-size:16px; margin-bottom:20px; display:flex; align-items:center; gap:10px; color:#1e293b;">
+                <span style="font-size:20px;">🌪️</span> ตัวกรอง
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1.5fr; gap:20px;">
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:8px;">📅 ประเภทการซื้อขาย</label>
+                    <select style="width:100%; padding:10px; border:none; border-radius:8px; background:#7c3aed; color:white; font-weight:600;">
+                        <option>ทุกประเภท</option>
+                        <option>Swing Trade</option>
+                        <option>Scalping</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:8px;">◎ ผลลัพธ์</label>
+                    <select style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; color:#334155;">
+                        <option>ผลลัพธ์ทั้งหมด</option>
+                        <option>ชนะ (Win)</option>
+                        <option>แพ้ (Loss)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:8px;">🕒 ช่วงเวลา</label>
+                    <select style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; color:#334155;">
+                        <option>ตลอดกาล</option>
+                        <option>7 วันล่าสุด</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:8px;">🔍 สัญลักษณ์ค้นหา</label>
+                    <input type="text" placeholder="เช่น EURUSD, GBPJPY..." style="width:100%; padding:10px 15px; border:1px solid #e2e8f0; border-radius:8px; box-sizing:border-box;">
+                </div>
+            </div>
+        </div>
+
+        <div id="history-list-container" style="background:white; padding:30px; border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,0.03); text-align:left;">
+            <div class="history-table-wrapper" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                    <thead>
+                        <tr style="text-align: left; border-bottom: 2px solid #f0f0f0;">
+                            <th style="padding: 12px; color: #64748b; font-weight: 600;">เวลา</th>
+                            <th style="color: #64748b; font-weight: 600;">คู่เงิน</th>
+                            <th style="color: #64748b; font-weight: 600;">สัญญาณ</th>
+                            <th style="color: #64748b; font-weight: 600;">ความแม่นยำ</th>
+                            <th style="color: #64748b; font-weight: 600;">สรุปการวิเคราะห์</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body" style="color: #1e293b;">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+<div id="learning-view" class="section-view" style="padding:40px; background:#f0f9ff; min-height:100vh;">
+        <div style="text-align:center; margin-bottom:30px;">
+            <h1 style="color:#6200ea; font-size:36px; font-weight:bold; margin-bottom:10px;">ศูนย์การเรียนรู้ 🎓</h1>
+            <p style="color:#64748b; font-size:16px;">เรียนรู้ศิลปะแห่งการซื้อขายด้วยบทเรียนส่วนบุคคลที่ขับเคลื่อนด้วย AI</p>
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+                <span style="background:#ede9fe; color:#7c3aed; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:bold;">🧬 AI Tutor</span>
+                <span style="background:#dcfce7; color:#166534; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:bold;">🟢 ฟรี</span>
+                <span style="background:#ffedd5; color:#c2410c; padding:5px 15px; border-radius:20px; font-size:12px; font-weight:bold;">🔥 พรีเมียม</span>
+            </div>
+        </div>
+
+        <div style="background:#f3e8ff; border:1px solid #d8b4fe; border-radius:12px; padding:20px; margin-bottom:30px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="width:50px; height:50px; background:#7c3aed; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px;">🤖</div>
+                <div>
+                    <h3 style="margin:0; color:#6b21a8; font-size:16px;">AI Tutor อัจฉริยะ</h3>
+                    <p style="margin:0; font-size:13px; color:#7e22ce;">สงสัยเรื่องกราฟ? ถามผมได้เลย!</p>
+                </div>
+            </div>
+            <button style="color:#16a34a; background:none; border:none; font-weight:bold; cursor:pointer;">✨ เริ่มแชท</button>
+        </div>
+
+        <div style="margin-bottom:30px; position:relative;">
+            <input type="text" id="lessonSearchInput" onkeyup="searchLessons()" placeholder="ค้นหาบทเรียน เช่น 'RSI', 'Mindset'..." class="lc-search-input">
+            <span style="position:absolute; right:20px; top:15px; color:#94a3b8;">🔍</span>
+        </div>
+
+        <div class="lc-card-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+            
+            <div class="lc-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-size:10px;">ยอดนิยม</span>
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">พื้นฐาน</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Swing Trade Strategy</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:15px;">เจาะลึกกลยุทธ์ทำกำไรระยะกลาง เน้นกินคำใหญ่</p>
+                <button onclick="startLesson('Swing Trade')" style="width:100%; background:#7c3aed; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px;">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-size:10px;">แนะนำ</span>
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">เทคนิคอล</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Chart Patterns Bible</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:15px;">คัมภีร์รูปแบบกราฟกลับตัวที่แม่นยำที่สุด</p>
+                <button onclick="startLesson('Chart Patterns')" style="width:100%; background:#7c3aed; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px;">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border:1px solid #fcd34d;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#ffedd5; color:#c2410c; padding:2px 8px; border-radius:4px; font-size:10px;">👑 พรีเมียม</span>
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">ขั้นสูง</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Scalping Mastery</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:15px;">เทคนิคเทรดสั้น ฉบับมือสังหาร เข้าไวออกไว</p>
+                <button onclick="openPremiumModal()" style="width:100%; background:linear-gradient(90deg, #d97706, #b45309); color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px;">🔒 ปลดล็อก</button>
+            </div>
+            
+            <div class="lc-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-size:10px;">สำคัญ</span>
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">การบริหาร</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Money Management</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:15px;">กฎเหล็กการรักษาเงินทุน ให้พอร์ตโตยั่งยืน</p>
+                <button onclick="startLesson('Money Management')" style="width:100%; background:#7c3aed; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px;">🚀 เข้าสู่บทเรียน</button>
+            </div>
+             <div class="lc-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#f3e8ff; color:#6b21a8; padding:2px 8px; border-radius:4px; font-size:10px;">Mindset</span>
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">จิตวิทยา</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Trading Psychology</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:15px;">วิธีชนะใจตัวเอง ควบคุมความโลภและความกลัว</p>
+                <button onclick="startLesson('Psychology')" style="width:100%; background:#7c3aed; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px;">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-size:10px;">ใหม่</span>
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">คริปโต</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Crypto & Blockchain</h4>
+                <p style="font-size:12px; color:#64748b; margin-bottom:15px;">ปูพื้นฐานโลกสินทรัพย์ดิจิทัล Bitcoin คืออะไร</p>
+                <button onclick="startLesson('Crypto Basics')" style="width:100%; background:#7c3aed; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-size:12px;">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-size:10px;">พื้นฐาน</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Intro to Technical Analysis</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">ปูพื้นฐานการอ่านกราฟสำหรับมือใหม่</p>
+                <button onclick="startLesson('Technical Analysis')" class="lc-btn-unlock-sm">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#f3e8ff; color:#6b21a8; padding:2px 8px; border-radius:4px; font-size:10px;">แท่งเทียน</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Candlestick Mastery</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">อ่านใจตลาดผ่านรูปแบบแท่งเทียน</p>
+                <button onclick="startLesson('Candlestick')" class="lc-btn-unlock-sm">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-size:10px;">สำคัญ</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Support & Resistance</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">กลยุทธ์ซื้อขายแนวรับและแนวต้าน</p>
+                <button onclick="startLesson('Support Resistance')" class="lc-btn-unlock-sm">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:10px; font-size:10px;">อินดิเคเตอร์</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Moving Average Guide</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">ใช้เส้นค่าเฉลี่ยจับเทรนด์ใหญ่อย่างเซียน</p>
+                <button onclick="startLesson('Moving Average')" class="lc-btn-unlock-sm">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#fffbeb; color:#d97706; padding:2px 8px; border-radius:10px; font-size:10px;">วัฏจักร</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Market Cycles</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">เข้าใจ 4 ช่วงเวลาของตลาดเพื่อไม่ติดดอย</p>
+                <button onclick="startLesson('Market Cycles')" class="lc-btn-unlock-sm">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:10px; font-size:10px;">ขั้นสูง</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Volume Analysis</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">ยืนยันจุดเข้าด้วยปริมาณการซื้อขาย</p>
+                <button onclick="startLesson('Volume')" class="lc-btn-unlock-sm">🚀 เข้าสู่บทเรียน</button>
+            </div>
+
+            <div class="lc-card" style="border:1px solid #fcd34d;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="background:#ffedd5; color:#c2410c; padding:2px 8px; border-radius:4px; font-size:10px;">👑 พรีเมียม</span>
+                </div>
+                <h4 style="margin:0 0 5px 0;">Advanced Price Action</h4>
+                <p style="font-size:12px; margin-top:5px;" class="text-muted">โครงสร้างราคาขั้นสูง (SMC/Wyckoff)</p>
+                <button onclick="openPremiumModal()" class="lc-btn-premium" style="background:#d97706;">🔒 ปลดล็อก (PRO)</button>
+            </div>
+        </div>
+    </div> <div id="settings-view" class="section-view" style="display:none; width: 100%; min-height: 100vh; background-color: var(--st-bg-main); padding: 40px; box-sizing: border-box; transition: all 0.3s ease;">
+    
+    <style>
+        /* ☀️ 1. ค่าเริ่มต้น (Light Mode) */
+        #settings-view {
+            --st-bg-main: #f8fafc;        /* พื้นหลังจอ */
+            --st-card-bg: #ffffff;        /* พื้นหลังการ์ด */
+            --st-text-main: #1e293b;      /* สีตัวหนังสือหลัก */
+            --st-text-sub: #64748b;       /* สีตัวหนังสือรอง */
+            --st-border: #e2e8f0;         /* เส้นขอบ */
+            --st-input-bg: #ffffff;       /* พื้นหลังช่องกรอก */
+            
+            /* สีกล่อง Billing (เขียว) */
+            --st-bill-bg: #ecfdf5;
+            --st-bill-border: #6ee7b7;
+            --st-bill-text: #065f46;
+        }
+
+        /* 🌙 2. โหมดมืด (Dark Mode) - **แก้ตรงนี้ครับ** */
+        /* ดักจับทั้ง class="dark" และ data-theme="dark" ให้ครอบคลุมทุกระบบ */
+        body.dark #settings-view, 
+        body.dark-mode #settings-view,
+        body[data-theme="dark"] #settings-view {  /* <--- บรรทัดนี้สำคัญมาก! */
+            --st-bg-main: #0f172a;        /* พื้นหลังจอมืด */
+            --st-card-bg: #1e293b;        /* พื้นหลังการ์ดมืด (น้ำเงินเข้ม) */
+            --st-text-main: #f8fafc;      /* ตัวหนังสือขาว */
+            --st-text-sub: #94a3b8;       /* ตัวหนังสือเทา */
+            --st-border: #334155;         /* เส้นขอบเทาเข้ม */
+            --st-input-bg: #334155;       /* ช่องกรอกสีเข้ม */
+            
+            /* สีกล่อง Billing (ปรับให้สว่างในโหมดมืด) */
+            --st-bill-bg: rgba(16, 185, 129, 0.15);
+            --st-bill-border: #059669;
+            --st-bill-text: #6ee7b7;      /* เขียวสว่าง */
+        }
+
+        /* Utility Classes */
+        .st-card { background-color: var(--st-card-bg) !important; border: 1px solid var(--st-border); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1); }
+        
+        .st-input { 
+            background-color: var(--st-input-bg) !important; 
+            color: var(--st-text-main) !important; 
+            border: 1px solid var(--st-border) !important; 
+            width: 100%; padding: 12px; border-radius: 8px; outline: none;
+        }
+        
+        /* บังคับสีตัวหนังสือให้เชื่อฟังตัวแปรเท่านั้น */
+        .st-title { color: var(--st-text-main) !important; font-size: 32px; font-weight: 800; margin: 0; }
+        .st-desc { color: var(--st-text-sub) !important; margin-top: 5px; font-size: 16px; }
+        .st-label { color: var(--st-text-main) !important; font-weight: 600; margin-bottom: 8px; display: block; }
+        .st-h3 { color: var(--st-text-main) !important; margin: 0 0 5px 0; font-size: 18px; }
+    </style>
+
+    <div style="max-width: 900px; margin: 0 auto; font-family: 'Sarabun', sans-serif;">
+        <div style="margin-bottom: 30px;">
+            <h1 class="st-title">การตั้งค่า</h1>
+            <p class="st-desc">จัดการข้อมูลบัญชีและระบบของคุณ</p>
+        </div>
+
+        <div class="st-card" style="padding: 10px; display: inline-flex; gap: 10px; margin-bottom: 30px; border-radius: 12px;">
+            <button onclick="switchSettingTab('profile')" id="btn-profile" style="padding: 10px 25px; border-radius: 8px; border: none; background: #6200ea; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px;">👤 โปรไฟล์</button>
+            <button onclick="switchSettingTab('billing')" id="btn-billing" style="padding: 10px 25px; border-radius: 8px; border: none; background: transparent; color: var(--st-text-sub); font-weight: 600; cursor: pointer; font-size: 14px;">💳 การชำระเงิน</button>
+            <button onclick="switchSettingTab('security')" id="btn-security" style="padding: 10px 25px; border-radius: 8px; border: none; background: transparent; color: var(--st-text-sub); font-weight: 600; cursor: pointer; font-size: 14px;">🛡️ ความปลอดภัย</button>
+        </div>
+
+        <div class="st-card" style="padding: 40px;">
+            
+            <div id="tab-profile">
+                <div style="display: flex; align-items: center; gap: 20px; padding-bottom: 30px; border-bottom: 1px solid var(--st-border); margin-bottom: 30px;">
+                    <img src="https://ui-avatars.com/api/?name=Gu+Rock&background=6200ea&color=fff&size=128" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #f3e8ff;">
+                    <div>
+                        <h3 class="st-h3">รูปโปรไฟล์</h3>
+                        <p class="st-desc" style="margin: 0 0 15px 0; font-size: 13px;">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 2MB</p>
+                        <button style="border: 1px solid var(--st-border); background: var(--st-input-bg); color: var(--st-text-main); padding: 8px 15px; border-radius: 6px; cursor: pointer;">อัปโหลดรูปใหม่</button>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <label class="st-label">ชื่อที่แสดง</label>
+                        <input type="text" value="Gu rock" class="st-input">
+                    </div>
+                    <div>
+                        <label class="st-label">อีเมล</label>
+                        <input type="email" value="brflove156@gmail.com" readonly class="st-input" style="opacity: 0.7;">
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 30px;">
+                    <button onclick="alert('✅ บันทึกข้อมูลสำเร็จ!')" style="background: #6200ea; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(98, 0, 234, 0.3);">บันทึกการเปลี่ยนแปลง</button>
+                </div>
+            </div>
+
+            <div id="tab-billing" style="display: none;">
+                <div style="background-color: var(--st-bill-bg); border: 1px solid var(--st-bill-border); border-radius: 12px; padding: 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h4 style="margin: 0; color: var(--st-bill-text) !important; font-size: 18px;">สถานะ: Free Plan</h4>
+                        <p style="margin: 5px 0 0 0; color: var(--st-bill-text) !important; opacity: 0.9; font-size: 14px;">ใช้งานฟรีตลอดชีพ ไม่มีค่าใช้จ่าย</p>
+                    </div>
+                    <button style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">อัปเกรดเป็น Pro 🚀</button>
+                </div>
+                
+                <div style="margin-top: 40px; text-align: center; color: var(--st-text-sub);">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🧾</div>
+                    <p class="st-desc">ยังไม่มีประวัติการชำระเงินในขณะนี้</p>
+                </div>
+            </div>
+
+            <div id="tab-security" style="display: none;">
+                <h3 class="st-h3" style="margin-top: 0;">เปลี่ยนรหัสผ่าน</h3>
+                
+                <div style="margin-bottom: 20px; margin-top: 20px;">
+                    <label class="st-label">รหัสผ่านปัจจุบัน</label>
+                    <input type="password" placeholder="••••••••" class="st-input">
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <label class="st-label">รหัสผ่านใหม่</label>
+                    <input type="password" placeholder="ตั้งรหัสผ่านใหม่" class="st-input">
+                </div>
+                <button onclick="alert('🔒 เปลี่ยนรหัสผ่านเรียบร้อย!')" style="background: #6200ea; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; cursor: pointer;">ยืนยันการเปลี่ยนรหัสผ่าน</button>
+            </div>
+            <div class="pro-card" style="margin-top: 20px;">
+    <h3 style="color:var(--db-text-main); margin-bottom:15px;">🤖 การตั้งค่า AI Engine</h3>
+    
+    <div style="margin-bottom: 15px;">
+        <label style="display:block; color:var(--db-text-sub); margin-bottom:5px;">เลือกรุ่น AI:</label>
+        <select id="ai-model-select" class="sup-select" style="width:100%; padding:10px; border-radius:8px;">
+    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (เร็วที่สุด / ประหยัด Quota)</option>
+    <option value="gemini-2.5-flash">Gemini 2.5 Flash (มาตรฐานใหม่ แม่นยำสูง)</option>
+    <option value="gemini-3-flash">Gemini 3 Flash (รุ่นทดสอบประสิทธิภาพสูง)</option>
+    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+    
+    <option value="gemini-robotics-er-1.5-preview">Gemini Robotics Preview (รุ่นวิเคราะห์โครงสร้าง)</option>
+    </select>
+    </div>
+
+    <div>
+        <label style="display:block; color:var(--db-text-sub); margin-bottom:5px;">สถานะคีย์ปัจจุบัน:</label>
+        <div id="key-status" style="padding:10px; background:#e8f5e9; color:#2e7d32; border-radius:8px; font-size:14px;">
+            ✅ ระบบกำลังใช้งาน Multi-Key Rotation (สลับคีย์อัตโนมัติ)
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchSettingTab(tabName) {
+        ['profile', 'billing', 'security'].forEach(t => {
+            document.getElementById('tab-' + t).style.display = 'none';
+            document.getElementById('btn-' + t).style.background = 'transparent';
+            document.getElementById('btn-' + t).style.color = 'var(--st-text-sub)';
+        });
+        document.getElementById('tab-' + tabName).style.display = 'block';
+        document.getElementById('btn-' + tabName).style.background = '#6200ea';
+        document.getElementById('btn-' + tabName).style.color = '#fff';
+    }
+</script>
+    </script>
+    <script>
+        function switchSetTab(tabName, btn) {
+            document.querySelectorAll('.st-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.st-tab-btn').forEach(el => {
+                el.style.color = '#6b7280';
+                el.style.borderBottom = '2px solid transparent';
+            });
+            document.getElementById('st-' + tabName).style.display = 'block';
+            btn.style.color = '#7c3aed';
+            btn.style.borderBottom = '2px solid #7c3aed';
+        }
+        // --- 🔍 ฟังก์ชันค้นหาบทเรียน (Real-time Search) ---
+    function searchLessons() {
+        // 1. รับค่าจากช่องพิมพ์
+        let input = document.getElementById('lessonSearchInput');
+        let filter = input.value.toUpperCase();
+        
+        // 2. หาการ์ดบทเรียนทั้งหมด
+        let cards = document.querySelectorAll('.lc-card');
+
+        // 3. วนลูปเช็คทีละใบ
+        cards.forEach(card => {
+            // เอาข้อความทั้งหมดในการ์ดมาเช็ค (ชื่อเรื่อง + คำอธิบาย)
+            let text = card.innerText.toUpperCase();
+            
+            // ถ้าเจอคำที่พิมพ์ -> แสดง, ถ้าไม่เจอ -> ซ่อน
+            if (text.includes(filter)) {
+                card.style.display = ""; // โชว์
+            } else {
+                card.style.display = "none"; // ซ่อน
+            }
+        });
+    }
+    </script>
+    </main>
+    <div id="lesson-room" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; overflow-y:auto;">
+        
+        <div style="max-width:800px; margin:0 auto; padding:40px 20px;">
+            <div style="text-align:right; margin-bottom:20px; position:sticky; top:20px;">
+                <button onclick="closeLesson()" style="padding:10px 20px; border-radius:30px; border:none; background:#f1f5f9; cursor:pointer; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                    ❌ ปิดหน้าต่าง
+                </button>
+            </div>
+
+            <div id="lesson-content-area" class="animate-fade-in">
+                <span id="lesson-category" style="background:#ede9fe; color:#7c3aed; padding:5px 15px; border-radius:15px; font-weight:bold; font-size:14px;">หมวดหมู่</span>
+                <h1 id="lesson-title" style="font-size:32px; margin:20px 0; color:#1e293b;">หัวข้อบทเรียน</h1>
+                <div style="height:4px; width:50px; background:#7c3aed; border-radius:2px; margin-bottom:30px;"></div>
+                <div id="lesson-body" style="font-size:18px; line-height:1.8; color:#334155;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="premium-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; backdrop-filter:blur(5px); align-items:center; justify-content:center; font-family:'Sarabun', sans-serif;">
+        
+        <div class="animate-bounce-in" style="background:white; width:90%; max-width:850px; border-radius:24px; padding:0; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); display:flex; flex-direction:column; max-height:90vh; overflow-y:auto;">
+            
+            <button onclick="closePremiumModal()" style="position:absolute; top:20px; right:20px; background:#f3f4f6; border:none; width:36px; height:36px; border-radius:50%; font-size:18px; cursor:pointer; color:#6b7280; display:flex; align-items:center; justify-content:center; z-index:10;">✕</button>
+
+            <div style="text-align:center; padding:40px 40px 20px 40px;">
+                <h2 style="margin:0; font-size:28px; color:#1e293b; font-weight:800;">สมัครสมาชิก Tradvio Premium</h2>
+                <p style="color:#64748b; margin-top:8px;">รับสิทธิ์การเข้าถึงฟีเจอร์และข้อมูลวิเคราะห์ทั้งหมดแบบไม่จำกัด</p>
+                
+                <div style="background:#f3f4f6; display:inline-flex; padding:5px; border-radius:30px; margin-top:20px; position:relative;">
+                    <button id="btn-monthly" onclick="switchPlan('monthly')" style="padding:8px 25px; border-radius:25px; border:none; background:#6200ea; color:white; font-weight:bold; cursor:pointer; transition:0.3s; z-index:2;">รายเดือน</button>
+                    <button id="btn-yearly" onclick="switchPlan('yearly')" style="padding:8px 25px; border-radius:25px; border:none; background:transparent; color:#6b7280; font-weight:bold; cursor:pointer; transition:0.3s; z-index:2;">รายปี (คุ้มสุด 🔥)</button>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; padding:0 40px 40px 40px; gap:20px;">
+                
+                <div style="flex:1; min-width:300px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:25px; height:100%;">
+                        <div id="plan-display">
+                            <h3 style="margin:0; color:#1e293b;">แผนรายเดือน</h3>
+                            <p style="font-size:13px; color:#64748b;">เหมาะสำหรับผู้เริ่มต้นใช้งาน</p>
+                            <div style="margin:15px 0;">
+                                <span style="font-size:36px; font-weight:800; color:#6200ea;">$19.99</span>
+                                <span style="color:#64748b;">/เดือน</span>
+                            </div>
+                        </div>
+                        
+                        <ul style="list-style:none; padding:0; margin:0; font-size:14px; color:#334155;">
+                            <li style="margin-bottom:10px;">✅ สามารถดูแผนภูมิได้ไม่จำกัดจำนวนครั้ง</li>
+                            <li style="margin-bottom:10px;">✅ เนื้อหาทั้งหมดของศูนย์การเรียนรู้</li>
+                            <li style="margin-bottom:10px;">✅ การตรวจสอบการซื้อขายด้วย AI แบบไม่จำกัด</li>
+                            <li style="margin-bottom:10px;">✅ คุณสมบัติขั้นสูงของวารสาร</li>
+                            <li style="margin-bottom:10px;">✅ ตัวชี้วัดระดับพรีเมียมทั้งหมด</li>
+                        </ul>
+
+                        <button onclick="processPayment()" style="width:100%; background:linear-gradient(135deg, #6200ea, #7c3aed); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; margin-top:20px; cursor:pointer; box-shadow:0 4px 10px rgba(98, 0, 234, 0.3);">
+                            สมัครสมาชิกเลย 🚀
+                        </button>
+                    </div>
+                </div>
+
+                <div id="year-promo-box" style="flex:1; min-width:300px; display:none; animation:fadeIn 0.5s;">
+                    <div style="background:linear-gradient(135deg, #fffbeb, #fff7ed); border:2px solid #fcd34d; border-radius:16px; padding:25px; position:relative; height:100%;">
+                        <div style="position:absolute; top:-12px; right:20px; background:#f59e0b; color:white; font-size:12px; font-weight:bold; padding:4px 12px; border-radius:20px;">★ คุ้มค่าที่สุด</div>
+                        
+                        <h3 style="margin:0; color:#92400e;">แผนรายปี</h3>
+                        <p style="font-size:13px; color:#b45309;">ประหยัดสูงสุดสำหรับนักลงทุนจริงจัง</p>
+                        <div style="margin:15px 0;">
+                            <span style="font-size:36px; font-weight:800; color:#d97706;">$99.99</span>
+                            <span style="color:#b45309;">/ปี</span>
+                        </div>
+                        <div style="background:#dcfce7; color:#166534; padding:5px 10px; border-radius:8px; display:inline-block; font-size:12px; font-weight:bold; margin-bottom:15px;">
+                            ⭐ ประหยัด $139.89 ต่อปี (ส่วนลด 58%)
+                        </div>
+
+                        <button onclick="processPayment()" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; margin-top:20px; cursor:pointer; box-shadow:0 4px 10px rgba(245, 158, 11, 0.3);">
+                            สมัครสมาชิกรายปี ⭐
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="offer-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+        <div class="animate-bounce-in" style="background:white; width:90%; max-width:400px; border-radius:20px; padding:30px; text-align:center; position:relative;">
+            <button onclick="document.getElementById('offer-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:20px; cursor:pointer; color:#9ca3af;">✕</button>
+            
+            <h2 style="font-size:24px; color:#1e293b; margin:0 0 10px 0;">รอสักครู่! ข้อเสนอพิเศษ</h2>
+            <p style="color:#64748b; font-size:14px; margin-bottom:20px;">รับ <strong style="color:#ef4444;">ส่วนลด 50%</strong> สำหรับเดือนแรกของคุณ<br>ส่วนลดพิเศษนี้จะหมดอายุใน:</p>
+            
+            <div style="background:#ef4444; color:white; font-size:24px; font-weight:bold; padding:10px 20px; border-radius:10px; display:inline-block; margin-bottom:20px;">
+                🕒 <span id="offer-timer">09:59</span>
+            </div>
+            
+            <button onclick="processPayment('offer')" style="width:100%; background:#2563eb; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; margin-bottom:10px;">รับส่วนลด 50% ทันที ($9.99)</button>
+            <button onclick="document.getElementById('offer-modal').style.display='none'" style="width:100%; background:none; border:none; color:#64748b; font-size:12px; cursor:pointer; text-decoration:underline;">ไม่เป็นไร ขอบคุณ ฉันจะจ่ายราคาเต็ม</button>
+        </div>
+    </div>
+    
+
+    <script>
+        const prefix = 'Eden24K A';
+        let currentPlan = 'monthly';
+
+        function openPremiumModal() {
+            document.getElementById('premium-modal').style.display = 'flex';
+            // สุ่มเปิด Offer 30% ของเวลา
+            if(Math.random() > 0.7) {
+                setTimeout(() => {
+                    document.getElementById('offer-modal').style.display = 'flex';
+                    startTimer();
+                }, 2000);
+            }
+        }
+
+        function closePremiumModal() {
+            document.getElementById('premium-modal').style.display = 'none';
+        }
+
+        function switchPlan(plan) {
+            currentPlan = plan;
+            const btnM = document.getElementById('btn-monthly');
+            const btnY = document.getElementById('btn-yearly');
+            const display = document.getElementById('plan-display');
+            const promoBox = document.getElementById('year-promo-box');
+
+            if(plan === 'monthly') {
+                btnM.style.background = '#6200ea'; btnM.style.color = 'white';
+                btnY.style.background = 'transparent'; btnY.style.color = '#6b7280';
+                
+                display.innerHTML = `
+                    <h3 style="margin:0; color:#1e293b;">แผนรายเดือน</h3>
+                    <p style="font-size:13px; color:#64748b;">เหมาะสำหรับผู้เริ่มต้นใช้งาน</p>
+                    <div style="margin:15px 0;">
+                        <span style="font-size:36px; font-weight:800; color:#6200ea;">$19.99</span>
+                        <span style="color:#64748b;">/เดือน</span>
+                    </div>`;
+                promoBox.style.display = 'none';
+            } else {
+                btnY.style.background = '#d97706'; btnY.style.color = 'white';
+                btnM.style.background = 'transparent'; btnM.style.color = '#6b7280';
+                
+                display.innerHTML = `
+                    <h3 style="margin:0; color:#1e293b;">แผนรายปี</h3>
+                    <div style="margin:15px 0;">
+                        <span style="font-size:36px; font-weight:800; color:#6200ea;">$99.99</span>
+                        <span style="color:#64748b;">/ปี</span>
+                    </div>`;
+                promoBox.style.display = 'block';
+            }
+        }
+
+        function processPayment(type) {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ กำลังเชื่อมต่อธนาคาร...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                alert("🎉 ชำระเงินจำลองสำเร็จ! \n(ในระบบจริงจะเชื่อมต่อ Stripe API ตรงนี้)");
+                btn.innerText = originalText;
+                btn.disabled = false;
+                closePremiumModal();
+                document.getElementById('offer-modal').style.display = 'none';
+                
+                // อัปเดตสถานะเป็น PRO ในหน้าตั้งค่า
+                document.querySelectorAll('.premium-badge').forEach(el => el.style.display = 'inline-block');
+            }, 2000);
+        }
+
+        function startTimer() {
+            let duration = 60 * 10; // 10 minutes
+            const display = document.querySelector('#offer-timer');
+            let timer = setInterval(function () {
+                let minutes = parseInt(duration / 60, 10);
+                let seconds = parseInt(duration % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--duration < 0) {
+                    clearInterval(timer);
+                    document.getElementById('offer-modal').style.display = 'none';
+                }
+            }, 1000);
+        }
+
+async function submitSupport(event) {
+        event.preventDefault(); // ห้ามรีเฟรชหน้า
+        
+        // ลิงก์ Google Apps Script ของบอส
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzLY9Qh_z6QMlfLC_lMdMcTESCNR_8qHbn8-saiyhyD-MJHoeoMh2tBDwxW6j6g4Rfo/exec';
+
+        const form = event.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        // แสดงสถานะกำลังส่ง
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '⏳ กำลังส่งข้อมูลไปยัง Telegram...';
+        submitBtn.disabled = true;
+
+        try {
+            let requestBody = new FormData(form);
+            const response = await fetch(scriptURL, { method: 'POST', body: requestBody });
+            
+            // สำเร็จ!
+            alert('🚀 สำเร็จ! ข้อมูลแจ้งเตือนเข้า Telegram บอสแล้ว');
+            form.reset(); // ล้างฟอร์ม
+        } catch (error) {
+            alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+        
+    </script>
+<script>
+    
+        // --- 📚 คลังความรู้ฉบับ "HARDCORE TRADER BIBLE" (เนื้อหา 100+ บรรทัด/หัวข้อ + รูปกราฟ 100%) ---
+        const lessonData = {
+            
+            // =========================================
+            // 1. Technical Analysis (พื้นฐานแน่นปึ้ก)
+            // =========================================
+            'Technical Analysis': {
+                cat: 'Basic', title: 'บทนำ: แก่นแท้ของการวิเคราะห์เทคนิค (Technical Analysis)',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    
+                    <h3>1. ปรัชญา "Hardcore Analysis" (อ่านกราฟให้ทะลุถึงกระดูก)</h3>
+                    <p>ยินดีต้อนรับสู่โลกแห่งความจริง... การวิเคราะห์กราฟเทคนิค (Technical Analysis) ในระดับมืออาชีพนั้น ไม่ใช่การนั่งเดาว่า "พรุ่งนี้กราฟจะไปทางไหน" แบบหมอดู แต่มันคือ <strong>"สถิติประยุกต์และจิตวิทยามวลชน" (Applied Statistics & Mass Psychology)</strong> ที่ถูกบันทึกไว้ในรูปแบบของแท่งเทียน</p>
+                    <p>ทุกๆ การขยับของราคา (Tick) คือร่องรอยการต่อสู้ด้วย "เงินจริง" ระหว่างฝ่ายซื้อ (กระทิง) และฝ่ายขาย (หมี) ในหนังสือ <em>Hardcore Candlestick Analysis</em> ได้กล่าวไว้ชัดเจนว่า <strong>"Context is King" (บริบทคือพระเจ้า)</strong> การท่องจำรูปแบบแท่งเทียน (Pattern) โดยไม่ดูบริบทรอบข้าง คือความผิดพลาดอันดับ 1 ที่ทำให้เม่าหมดตัว แท่งเทียน Hammer แท่งเดียวกัน อาจเป็น "จุดกลับตัวที่ยอดเยี่ยม" หรือเป็น "กับดักมรณะ" ก็ได้ ขึ้นอยู่กับว่ามัน "เกิดที่ไหน" และ "เกิดอย่างไร"</p>
+                    <p>ดังนั้น หน้าที่ของคุณไม่ใช่การ "ทำนาย" (Predict) แต่คือการ "ตอบสนอง" (React) ต่อสิ่งที่กราฟบอก อย่างมีระบบและไร้อารมณ์</p>
+
+                    <hr style="border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+                    <h3>2. กฎ 3 ข้อของ Dow Theory (คัมภีร์บรรพบุรุษ)</h3>
+                    <p>Charles Dow ได้วางรากฐานของการวิเคราะห์กราฟไว้เมื่อ 100 กว่าปีก่อน และมันยังคงศักดิ์สิทธิ์มาจนถึงทุกวันนี้ในตลาด Bitcoin:</p>
+                    
+                    <div style="background:#f1f5f9; color:#334155; padding:25px; border-radius:12px; border-left:6px solid #6366f1; margin:20px 0;">
+                        <h4 style="margin-top:0; color:#4f46e5;">กฎข้อที่ 1: Price Discounts Everything (ราคาสะท้อนทุกอย่างแล้ว)</h4>
+                        <p>อย่าเสียเวลาไปนั่งวิเคราะห์ข่าวสงคราม, อัตราดอกเบี้ย Fed, หรือตัวเลข GDP ให้ปวดหัว เพราะทันทีที่ข่าวออก (หรือแม้กระทั่งก่อนข่าวออก) "คนวงใน" (Insiders) และ "รายใหญ่" (Smart Money) ได้ทำการซื้อขายจนราคาตอบสนองไปเรียบร้อยแล้ว</p>
+                        <p>กราฟราคาคือ "ผลสรุปสุดท้าย" ของข้อมูลข่าวสารทั่วโลก ดังนั้น <strong>"จงเชื่อกราฟ มากกว่าเชื่อข่าวลือ"</strong> ถ้าข่าวดีออก แต่กราฟร่วง ให้เชื่อกราฟ!</p>
+                        
+                        <h4 style="margin-top:20px; color:#4f46e5;">กฎข้อที่ 2: Price Moves in Trends (ราคาเคลื่อนที่เป็นแนวโน้ม)</h4>
+                        <p>ตลาดมีแรงเฉื่อย (Momentum) ตามกฎฟิสิกส์ เมื่อราคาเริ่มวิ่งไปทางไหน มันมักจะวิ่งไปทางนั้นต่อจนกว่าจะมีแรงต้านมหาศาลมาหยุดมัน</p>
+                        <ul>
+                            <li><strong>Uptrend (ขาขึ้น):</strong> สร้างจุดสูงสุดใหม่ที่สูงขึ้น (Higher High) และจุดต่ำสุดที่ยกตัวขึ้น (Higher Low) -> <em>กลยุทธ์: ย่อซื้อ (Buy Dip) เท่านั้น ห้าม Short สวน</em></li>
+                            <li><strong>Downtrend (ขาลง):</strong> สร้างจุดสูงสุดที่ต่ำลง (Lower High) และจุดต่ำสุดใหม่ (Lower Low) -> <em>กลยุทธ์: เด้งขาย (Sell Rally) เท่านั้น ห้าม Buy สวน</em></li>
+                        </ul>
+
+                        <h4 style="margin-top:20px; color:#4f46e5;">กฎข้อที่ 3: History Repeats Itself (ประวัติศาสตร์ซ้ำรอย)</h4>
+                        <p>ตลาดหุ้นเปลี่ยนยุคสมัย เทคโนโลยีเปลี่ยนไป แต่สิ่งหนึ่งที่ไม่เคยเปลี่ยนคือ <strong>"สันดานมนุษย์"</strong> (Human Nature) ความโลภ (Greed) และความกลัว (Fear) ยังคงขับเคลื่อนตลาดเหมือนเดิมเมื่อ 100 ปีก่อน ทำให้รูปแบบกราฟ (Chart Patterns) อย่าง Head & Shoulders, Double Top, หรือ Cup & Handle เกิดขึ้นซ้ำแล้วซ้ำเล่า และยังคงใช้ทำกำไรได้เสมอ</p>
+                    </div>
+
+                    <h3>3. องค์ประกอบของกราฟคุณภาพ (High Probability Setup)</h3>
+                    <p>ก่อนที่คุณจะกดออเดอร์ทุกครั้ง ให้ถามตัวเองด้วยเช็คลิสต์ 3 ข้อนี้ ถ้าขาดข้อใดข้อหนึ่ง <strong>"ห้ามกดเทรดเด็ดขาด"</strong> (No Setup, No Trade):</p>
+                    
+                    <ul style="line-height: 1.8;">
+                        <li>✅ <strong>1. Trend (แนวโน้ม):</strong> คุณกำลังเทรดตามน้ำ หรือสวนน้ำ? การเทรดตามเทรนด์ (Trend Following) มีโอกาสชนะสูงกว่า 70% เหมือนการพายเรือตามน้ำ มันไปได้ไวกว่าและเหนื่อยน้อยกว่า ส่วนการสวนเทรนด์ (Counter Trend) ต้องใช้ความชำนาญสูงมาก และมีความเสี่ยงที่จะโดนรถสิบล้อทับ</li>
+                        <li>✅ <strong>2. Level (ระดับราคา):</strong> ราคาปัจจุบันอยู่ที่ "จุดนัยสำคัญ" (Key Level) หรือไม่? เช่น แนวรับ (Support), แนวต้าน (Resistance), หรือเส้นค่าเฉลี่ย (EMA) เราจะไม่เทรดกลางอากาศ (No Man's Land) เราจะเทรดเมื่อราคาชนกำแพงเท่านั้น เพื่อให้ได้จุดเข้าที่ได้เปรียบที่สุด</li>
+                        <li>✅ <strong>3. Signal (สัญญาณ):</strong> มีแท่งเทียนกลับตัว (Reversal Candle) เกิดขึ้นที่ Level นั้นหรือไม่? เช่น เกิด Pin Bar ที่แนวรับ หรือ Engulfing ที่แนวต้าน สัญญาณนี้คือ "ไกปืน" ที่บอกว่ามีคนกลุ่มใหญ่เห็นเหมือนเรา และเริ่มมีการซื้อขายจริงแล้ว</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-top:20px; border:1px solid #334155;">
+                    <p style="text-align:center; font-size:12px; color:#64748b;">ภาพ: กราฟแท่งเทียนแสดงโครงสร้างราคาแบบ Uptrend และ Downtrend</p>
+                `
+            },
+
+            // =========================================
+            // 2. Candlestick (เจาะลึกแท่งเทียน)
+            // =========================================
+            'Candlestick': {
+                cat: 'Technical', title: 'Hardcore Candlestick: เจาะลึกไส้เทียนและจิตวิทยา',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    
+                    <h3>1. กายวิภาคของแท่งเทียน (Anatomy of Volatility)</h3>
+                    <p>แท่งเทียน 1 แท่ง ไม่ได้บอกแค่ราคา แต่มันคือ <strong>"สนามรบ"</strong> ที่บันทึกเรื่องราวการต่อสู้ระหว่าง "กองทัพกระทิง" (Buyer) และ "กองทัพหมี" (Seller) ในช่วงเวลานั้นๆ การอ่านแท่งเทียนให้ขาด ต้องดูให้ลึกถึงไส้ใน:</p>
+                    <ul>
+                        <li><strong>เนื้อเทียน (Body):</strong> เปรียบเสมือน "พื้นที่ยึดครอง" บอกถึง "พลังของผู้ชนะ" (Momentum) 
+                            <br>- เนื้อยาว = ชนะขาดลอย (Strong Momentum)
+                            <br>- เนื้อสั้น = สูสี หรือ ลังเล (Indecision)</li>
+                        <li><strong>ไส้เทียน (Wick):</strong> เปรียบเสมือน "ร่องรอยการปะทะ" บอกถึง "การต่อสู้และการปฏิเสธราคา" (Rejection) ไส้ยาวทางไหน แปลว่ามีแรงสวนมาจากทางนั้น</li>
+                        <li><strong>ราคาปิด (Close):</strong> สำคัญที่สุด! บอก "บทสรุปของสงคราม" ในรอบนั้น ห้ามตัดสินใจจนกว่าแท่งเทียนจะปิด (Candle Close) เพราะไส้เทียนยาวๆ มักจะเกิดขึ้นในวินาทีสุดท้าย</li>
+                    </ul>
+
+                    <h3>2. ความลับของไส้เทียน (The Secret of Wicks)</h3>
+                    <p>ในตำรา <em>Hardcore Candlestick</em> ระบุว่าไส้เทียนคือจุดที่รายใหญ่ทิ้งร่องรอยไว้ให้เราแกะรอย:</p>
+                    <div style="background:#fff7ed; border-left:5px solid #f97316; padding:15px; margin:15px 0;">
+                        <p><strong>🔥 Long Upper Wick (ไส้บนยาว):</strong> ราคาพยายามขึ้นไปทดสอบด้านบน แต่โดน "ตบ" กลับลงมาอย่างรุนแรง แสดงถึงแรงขายกดดัน (Bearish Pressure) มักเป็นจุดเริ่มต้นของการลง หรือการจบรอบขาขึ้น</p>
+                        <p><strong>🔥 Long Lower Wick (ไส้ล่างยาว):</strong> ราคาพยายามลงไปทดสอบด้านล่าง แต่โดน "ช้อน" ซื้อกลับขึ้นมาอย่างรวดเร็ว แสดงถึงแรงซื้อสนับสนุน (Bullish Pressure) มักเป็นจุดเริ่มต้นของการขึ้น หรือการกลับตัวที่แนวรับ</p>
+                    </div>
+
+                    <img src="https://images.unsplash.com/photo-1640340434855-6084b1f4901c?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>3. 3 รูปแบบแท่งเทียนเปลี่ยนชีวิต (Signature Patterns)</h3>
+                    <p>จากสถิติของ YMB Forex Pro และเทรดเดอร์ทั่วโลก นี่คือ 3 รูปแบบที่มี Win Rate สูงที่สุดเมื่อเกิดถูกที่ถูกเวลา (High Probability Reversal Patterns):</p>
+                    
+                    <div style="margin-bottom:30px;">
+                        <h4 style="color:#16a34a; border-bottom:2px solid #16a34a; display:inline-block; padding-bottom:5px;">A. Engulfing (แท่งกลืนกิน - ราชาแห่งการกลับตัว)</h4>
+                        <p><strong>ลักษณะ:</strong> แท่งที่ 2 (แท่งปัจจุบัน) ต้องมีเนื้อเทียนขนาดใหญ่จน "ห่อหุ้ม" หรือ "กลืน" แท่งก่อนหน้ามิดทั้งตัว (รวมไส้ด้วยยิ่งดี)</p>
+                        <p><strong>จิตวิทยา:</strong> ฝ่ายตรงข้ามถูกกวาดล้างจนหมดสิ้น (Total Domination) เช่น Bullish Engulfing คือแรงซื้อชนะแรงขายแบบเบ็ดเสร็จ เป็นสัญญาณการเปลี่ยนเทรนด์ที่รุนแรงที่สุด</p>
+                        <p><strong>จุดเข้า (Entry):</strong> เข้าทันทีที่จบแท่ง หรือรอตั้ง Limit Order ที่ 50% ของเนื้อเทียนแท่ง Engulfing (จุด Retrace) เพื่อให้ได้ราคาที่ดีกว่า</p>
+                    </div>
+
+                    <div style="margin-bottom:30px;">
+                        <h4 style="color:#dc2626; border-bottom:2px solid #dc2626; display:inline-block; padding-bottom:5px;">B. Pin Bar (ค้อนเทพเจ้า - การปฏิเสธราคา)</h4>
+                        <p><strong>ลักษณะ:</strong> มีเนื้อเทียนเล็กๆ อยู่ปลายด้านหนึ่ง และมีไส้ยาวมากๆ (ยาวกว่าเนื้ออย่างน้อย 2-3 เท่า) อยู่อีกด้านหนึ่ง เหมือนรูปค้อน หรือเข็มหมุด</p>
+                        <p><strong>จิตวิทยา:</strong> เป็น "กับดักสภาพคล่อง" (Liquidity Grab) ราคาวิ่งไปกิน Stop Loss ของรายย่อย แล้วดีดกลับทันที แสดงว่ารายใหญ่เข้ามารับของแล้ว</p>
+                        <p><strong>เงื่อนไขตายตัว:</strong> Pin Bar จะศักดิ์สิทธิ์ก็ต่อเมื่อเกิดที่ <em>แนวรับ/แนวต้าน</em> หรือเส้น <em>EMA</em> เท่านั้น! ถ้าเกิดกลางทาง (No Man's Land) ให้มองข้ามไปเลย เพราะมันไม่มีนัยสำคัญ</p>
+                    </div>
+
+                    <div style="margin-bottom:30px;">
+                        <h4 style="color:#d97706; border-bottom:2px solid #d97706; display:inline-block; padding-bottom:5px;">C. Inside Bar (สปริงอัดแน่น - การพักตัว)</h4>
+                        <p><strong>ลักษณะ:</strong> แท่งเทียนลูก (Child Bar) วิ่งอยู่ภายในกรอบ High-Low ของแท่งแม่ (Mother Bar) ไม่หลุดออกไปไหน</p>
+                        <p><strong>จิตวิทยา:</strong> ตลาดกำลังพักตัว สะสมพลัง เลือกทิศทาง (Consolidation) เหมือนสปริงที่ถูกกด ยิ่งอัดนาน แรงระเบิดยิ่งเยอะ</p>
+                        <p><strong>วิธีเทรด:</strong> ห้ามเดาทาง! ให้รอการ "ระเบิด" (Breakout) ทะลุกรอบแท่งแม่ออกไปทางไหน ให้ Follow ตามทางนั้น (Big Move Coming)</p>
+                    </div>
+                `
+            },
+
+            // =========================================
+            // 3. Support & Resistance (แนวรับต้าน)
+            // =========================================
+            'Support Resistance': {
+                cat: 'Strategy', title: 'กลยุทธ์แนวรับ-แนวต้าน: โซนสังหารรายใหญ่',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    
+                    <h3>1. แนวรับแนวต้านคือ "กำแพงจิตวิทยา"</h3>
+                    <p>สิ่งแรกที่ต้องปรับจูนคือ: <strong>"อย่ามองเป็นเส้น (Line) ให้มองเป็นโซน (Zone)"</strong> เพราะราคาไม่ได้หยุดที่จุดทศนิยมเป๊ะๆ เสมอไป รายใหญ่ (Banks/Institutions) ต้องการสภาพคล่อง (Liquidity) พวกเขาจึงมักกวาดซื้อขายเป็นบริเวณกว้าง</p>
+                    <ul>
+                        <li><strong>Demand Zone (แนวรับ/พื้น):</strong> พื้นที่ที่มี "ความต้องการซื้อ" มหาศาลรออยู่ เมื่อราคาลงมาถึง จะถูกดีดกลับอย่างรวดเร็ว (V-Shape Recovery) เหมือนลูกบอลกระทบพื้น</li>
+                        <li><strong>Supply Zone (แนวต้าน/เพดาน):</strong> พื้นที่ที่มี "ความต้องการขาย" รออยู่ เมื่อราคาขึ้นไปถึง จะถูกทุบลงมาทันที เหมือนโยนของขึ้นฟ้าแล้วตกใส่เพดาน</li>
+                    </ul>
+
+                    <h3>2. กฎการสลับขั้ว (SR Flip / Role Reversal)</h3>
+                    <p>นี่คือท่าหากินที่ใช้ได้ตลอดกาลและเป็นหัวใจของ Price Action กฎคือ: <em>"แนวต้านที่ถูกทำลาย จะกลายเป็นแนวรับที่แข็งแกร่ง"</em> (Resistance becomes Support) และในทางกลับกัน <em>"แนวรับที่หลุด จะกลายเป็นแนวต้านที่แข็งแกร่ง"</em></p>
+                    <p><strong>ขั้นตอนการเทรดแบบ Step-by-Step (The Winning Formula):</strong></p>
+                    <ol>
+                        <li><strong>Identify:</strong> ตีเส้นโซนราคาที่ชัดเจนใน Timeframe ใหญ่ (H4/D1)</li>
+                        <li><strong>Breakout:</strong> รอให้มีแท่งเทียนขนาดใหญ่ (Big Candle) พุ่งทะลุโซนแนวต้านขึ้นไปให้ชัดเจน (ห้ามเข้าตอนนี้เด็ดขาด เสี่ยงดอย!)</li>
+                        <li><strong>Pullback:</strong> รออย่างใจเย็น (Patience is key) ให้ราคาย่อตัวกลับมาทดสอบแนวต้านเดิมที่เพิ่งทะลุไป (ตอนนี้มันทำหน้าที่เป็นแนวรับแล้ว)</li>
+                        <li><strong>Confirmation:</strong> รอสัญญาณแท่งเทียนกลับตัว (เช่น Hammer, Pin Bar, Engulfing) ที่จุด Retest นี้</li>
+                        <li><strong>Execution:</strong> เข้า Buy ทันทีที่จบแท่งยืนยัน วาง Stop Loss ไว้ใต้ไส้เทียนนั้น และตั้ง TP ที่แนวต้านถัดไป</li>
+                    </ol>
+
+                    <img src="https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>3. กับดัก Breakout หลอก (Fakeout / Bull Trap / Bear Trap)</h3>
+                    <p>ตลาดไม่ได้แจกเงินง่ายๆ บ่อยครั้งที่เจ้ามือทำท่าเหมือนจะทะลุแนวต้าน (Breakout) เพื่อล่อให้รายย่อยกด Buy ตาม (FOMO) แล้วจู่ๆ ก็ทุบกลับลงมาปิดต่ำกว่าแนวต้านเดิม นี่คือ <strong>Fakeout</strong></p>
+                    <p><strong>วิธีป้องกัน Fakeout:</strong></p>
+                    <ul>
+                        <li><strong>รอจบแท่ง (Wait for Close):</strong> กฎเหล็ก! อย่าเชื่อราคาขณะที่แท่งเทียนยังวิ่งไม่จบ เพราะไส้เทียนยาวๆ มักเกิดวินาทีสุดท้าย</li>
+                        <li><strong>ดู Volume ประกอบ:</strong> การ Breakout ของจริง ต้องมาพร้อมกับ Volume ที่พุ่งสูงปรี๊ด ถ้า Breakout แต่ Volume แห้งๆ ให้ระวังกับดัก</li>
+                        <li><strong>ใช้ Buffer:</strong> อย่าตั้ง Stop Loss ชิดแนวรับเกินไป เผื่อระยะ Spread และระยะเหวี่ยง (Noise) สัก 10-20 จุดเสมอ เพื่อกันการโดน Stop Hunt</li>
+                    </ul>
+                `
+            },
+
+            // =========================================
+            // 4. Moving Average (อินดิเคเตอร์)
+            // =========================================
+            'Moving Average': {
+                cat: 'Indicator', title: 'Moving Average: เส้นทางเดินของเงิน (Dynamic Level)',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1535320903710-d9cf113d20c5?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    
+                    <h3>1. ทำไมต้องใช้ MA? (Trend Filter)</h3>
+                    <p>กราฟเปล่า (Naked Chart) ดีที่สุด แต่บางครั้งสายตาเราก็หลอกเรา หรือเราใช้อารมณ์มากเกินไป เส้น Moving Average (MA) จะช่วยลบ "สัญญาณรบกวน" (Noise) ออกไป และโชว์เฉพาะ "ทิศทางหลัก" ของตลาด เราแนะนำให้ใช้ <strong>EMA (Exponential Moving Average)</strong> เพราะมันคำนวณโดยให้น้ำหนักกับราคาล่าสุดมากกว่า ทำให้สัญญาณไวกว่า SMA</p>
+
+                    <h3>2. การตั้งค่ามาตรฐานกองทุน (Institutional Settings)</h3>
+                    <p>อย่าไปหาสูตรลับพิสดาร ใช้สิ่งที่กองทุนทั่วโลกใช้ เพื่อให้เรามองเห็นภาพเดียวกับรายใหญ่:</p>
+                    <ul>
+                        <li><strong>EMA 200 (The King - เส้นแบ่งนรกสวรรค์):</strong> ใช้ดูภาพใหญ่ระยะยาว
+                            <br>- ถ้าราคาอยู่ <strong>เหนือ</strong> เส้น 200 = ตลาดกระทิง (Bull Market) -> <em>หาจังหวะย่อ Buy เท่านั้น ห้าม Sell</em>
+                            <br>- ถ้าราคาอยู่ <strong>ใต้</strong> เส้น 200 = ตลาดหมี (Bear Market) -> <em>หาจังหวะเด้ง Sell เท่านั้น ห้าม Buy</em>
+                        </li>
+                        <li><strong>EMA 50 (The Prince - แนวรับเคลื่อนที่):</strong> ในเทรนด์ที่แข็งแรง ราคาจะไม่ลงไปถึงเส้น 200 แต่จะย่อมาแตะแค่เส้น 50 แล้วดีดกลับ (Dynamic Support/Resistance) ใช้เป็นจุดเข้าเทรดที่ได้เปรียบมาก (Trend Following Entry)</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>3. กลยุทธ์ Golden Cross & Death Cross</h3>
+                    <p>นี่คือสัญญาณระฆังบอกรอบใหญ่ที่นักลงทุนระยะยาวเฝ้ารอ:</p>
+                    <ul>
+                        <li><strong>Golden Cross (กระทิงคำราม):</strong> เส้นสั้น (EMA 50) ตัดเฉียงขึ้นเหนือเส้นยาว (EMA 200) -> สัญญาณการเริ่มต้นของขาขึ้นรอบใหญ่ (Major Bull Trend) ที่อาจกินเวลานานหลายเดือน</li>
+                        <li><strong>Death Cross (หมีผงาด):</strong> เส้นสั้น (EMA 50) ตัดเฉียงลงต่ำกว่าเส้นยาว (EMA 200) -> สัญญาณหายนะ ตลาดเตรียมถล่มลงยาว (Major Bear Trend)</li>
+                    </ul>
+                    <div style="background:#fee2e2; color:#b91c1c; padding:15px; border-radius:10px; border-left:5px solid #ef4444; margin-top:20px;">
+                        <strong>⚠️ ข้อควรระวัง:</strong> MA เป็น Lagging Indicator (มาช้ากว่าราคา) ห้ามใช้ในตลาด Sideway (ออกข้าง) เพราะเส้นจะพันกันมั่วไปหมด (Whipsaw) และทำให้คุณขาดทุนซ้ำซาก ให้ใช้เฉพาะตอนที่ตลาดมีเทรนด์ชัดเจนเท่านั้น!
+                    </div>
+                `
+            },
+
+            // =========================================
+            // 5. Market Cycles (วัฏจักรตลาด)
+            // =========================================
+            'Market Cycles': {
+                cat: 'Theory', title: 'วัฏจักรตลาด 4 ระยะ: อ่านเกมเจ้ามือด้วย Wyckoff Logic',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>ตลาดหุ้น, Crypto, หรือ Forex ไม่ได้วิ่งแบบสุ่ม (Random) แต่มันมี "วงจรชีวิต" ของมันเสมอ การรู้ว่าเราอยู่จุดไหนของแผนที่ จะช่วยให้คุณไม่ติดดอยและไม่ขายหมู ทฤษฎีนี้เรียกว่า <strong>Wyckoff Market Cycle</strong> ซึ่งแบ่งออกเป็น 4 ระยะหลัก:</p>
+
+                    <h3>ระยะที่ 1: Accumulation (ระยะสะสมของ - เจ้ามือเก็บของ)</h3>
+                    <p>หลังจากตลาดถล่มลงมาหนักๆ (Panic Sell) ราคาจะเริ่มหยุดลงและออกข้าง (Sideway) นานจนคนเบื่อ ข่าวร้ายจะเยอะมาก รายย่อยกลัวจนขายทิ้งหมดพอร์ต แต่ <strong>"รายใหญ่ (Smart Money)"</strong> จะอาศัยจังหวะนี้ทยอยเก็บของเงียบๆ โดยไม่ให้ราคากระโตกกระตาก (นี่คือจุดซื้อที่ดีที่สุดของ VI)</p>
+
+                    <h3>ระยะที่ 2: Mark-up (ระยะทำราคา - กระทิงดุ)</h3>
+                    <p>เมื่อรายใหญ่เก็บของจนครบแล้ว พวกเขาจะเริ่มดันราคาให้ทะลุกรอบสะสมขึ้นไป (Breakout) เกิดเป็นเทรนด์ขาขึ้น (Uptrend) ชัดเจน ข่าวดีเริ่มมา อินดิเคเตอร์ทุกตัวชี้ขึ้น รายย่อยเริ่มเห็นและกระโดดเกาะรถ เป็นช่วงที่ทำกำไรได้ง่ายที่สุดและเร็วที่สุด (Easy Money)</p>
+
+                    <img src="https://images.unsplash.com/photo-1642790106117-e829e14a795f?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>ระยะที่ 3: Distribution (ระยะกระจายของ - เจ้ามือออกของ)</h3>
+                    <p>เมื่อราคาขึ้นมาสูงมากๆ ข่าวดีจะพีคสุดๆ สื่อทุกช่องเชียร์ซื้อ (Euphoria) เป้าหมายราคาเวอร์วัง รายย่อยแห่กันเข้ามาเพราะกลัวตกรถ (FOMO) แต่รายใหญ่จะอาศัยจังหวะที่มีคนซื้อเยอะๆ นี้ <strong>"เทขายทำกำไร"</strong> ใส่รายย่อยทีละน้อย กราฟจะเริ่มผันผวนรุนแรง เหวี่ยงขึ้นเหวี่ยงลงแต่ไม่ไปไหน (นี่คือยอดดอย)</p>
+
+                    <h3>ระยะที่ 4: Mark-down (ระยะทุบราคา - ตลาดหมี)</h3>
+                    <p>เมื่อรายใหญ่ขายของหมดแล้ว จะไม่มีใครพยุงราคาอีกต่อไป ราคาจะทิ้งดิ่งลงเหว (Downtrend) อย่างรุนแรงและรวดเร็ว รายย่อยที่ติดดอยจะเริ่มสิ้นหวังและขายขาดทุนที่ก้นหลุม (Capitulation) ซึ่งก็จะไปเข้ามือรายใหญ่ที่รอรับของถูก วนกลับไปสู่ระยะที่ 1 ใหม่ เป็นวัฏจักรนิรันดร์</p>
+                `
+            },
+
+            // =========================================
+            // 6. Money Management (บริหารเงิน)
+            // =========================================
+            'Money Management': {
+                cat: 'Risk Management', title: '💰 Money Management: กฎเหล็กแห่งการรอดชีวิต',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1565514020176-dbf2277f2412?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    
+                    <h3>1. ความจริงที่โหดร้าย (The Ugly Truth)</h3>
+                    <p>จงจำประโยคนี้ให้ขึ้นใจ: <strong>"มือสมัครเล่นโฟกัสที่กำไร (How much I can make) แต่มืออาชีพโฟกัสที่ความเสี่ยง (How much I can lose)"</strong><br>
+                    ต่อให้คุณมีระบบเทรดที่แม่นยำ 90% แต่ถ้าคุณไม่มี Money Management (MM) ที่ดี วันหนึ่งที่คุณพลาด (ซึ่งมันต้องมีวันนั้นแน่ๆ) คุณอาจจะล้างพอร์ตในการเทรดเพียงครั้งเดียว การเทรดไม่ใช่การวิ่งระยะสั้น แต่มันคือการวิ่งมาราธอน ใครอยู่รอดได้นานที่สุด คนนั้นคือผู้ชนะ</p>
+
+                    <h3>2. กฎ 2% (The Golden Rule of Survival)</h3>
+                    <p>ห้ามเสี่ยงเกิน 2% ของเงินทุนทั้งหมดในพอร์ต ต่อการเทรด 1 ครั้ง เด็ดขาด!<br>
+                    <strong>ทำไม?</strong> สมมติคุณมีทุน $1,000 แล้วคุณเสี่ยง 2% ($20) ต่อไม้<br>
+                    - หากคุณแพ้ 5 ครั้งติด คุณจะเสียแค่ $100 (10% ของพอร์ต) พอร์ตยังสบายๆ แก้คืนได้ง่าย<br>
+                    - แต่ถ้าคุณเสี่ยง 20% ต่อไม้ หากแพ้ 5 ครั้งติด เงินคุณจะหายเกลี้ยง! หมดโอกาสแก้ตัว (Game Over)</p>
+
+                    <div style="background:#1e293b; color:#e2e8f0; padding:20px; border-radius:10px; border:2px solid #22c55e; margin:20px 0; text-align:center;">
+                        <h3 style="margin:0; color:#22c55e;">สูตรคำนวณ Lot Size (ต้องใช้ทุกครั้ง!)</h3>
+                        <p style="font-size:18px; font-weight:bold; margin-top:10px;">Lot = (เงินทุน x %ความเสี่ยง) / (ระยะ SL x Pip Value)</p>
+                        <p style="font-size:12px; color:#94a3b8; margin-top:5px;">ตัวอย่าง: ($1,000 x 0.02) / (500 points) = 0.04 Lot</p>
+                    </div>
+
+                    <img src="https://images.unsplash.com/photo-1639815188546-c43c240ff4df?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>3. พลังของ R:R Ratio (Risk Reward Ratio)</h3>
+                    <p>อย่าเป็นนักเทรดที่ "เก็บเหรียญสลึงตัดหน้าสิบล้อ" (เสี่ยงตายเพื่อกำไรนิดเดียว)<br>
+                    คุณต้องเข้าเทรดเฉพาะเมื่อ <strong>R:R > 1:2 ขึ้นไป</strong> เท่านั้น (เสี่ยงเสีย 1 ส่วน เพื่อแลกกำไร 2 ส่วน)<br>
+                    <strong>ตัวอย่าง:</strong> ถ้า Stop Loss 200 จุด -> ต้องตั้ง Take Profit อย่างน้อย 400 จุด<br>
+                    <strong>ความลับทางคณิตศาสตร์:</strong> ถ้าคุณใช้ R:R 1:2 ต่อให้คุณเทรดแพ้บ่อยกว่าชนะ (Win Rate 40%) พอร์ตคุณก็ยังโตได้! (แพ้ 6 ครั้งเสีย 6, ชนะ 4 ครั้งได้ 8 = กำไรสุทธิ 2)</p>
+                `
+            },
+
+            // =========================================
+            // 7. Psychology (จิตวิทยา)
+            // =========================================
+            'Psychology': {
+                cat: 'Mindset', title: '🧠 Trading Psychology: ชนะตลาดด้วยใจที่นิ่งสงบ',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>90% ของเทรดเดอร์ที่ล้มเหลว ไม่ได้แพ้เพราะ "ความรู้ไม่พอ" แต่แพ้เพราะ "ใจไม่นิ่ง" ตลาดถูกออกแบบมาเพื่อเล่นกับอารมณ์ดิบของมนุษย์ คือ ความโลภ (Greed) และความกลัว (Fear)</p>
+
+                    <h3>1. ศัตรูตัวร้าย: FOMO (Fear Of Missing Out)</h3>
+                    <p>อาการ "กลัวตกรถ" เห็นกราฟพุ่งเขียวๆ ยาวๆ แล้วอดใจไม่ไหว มือสั่นรีบกด Buy ตามโดยไม่มีแผน<br>
+                    <strong>ผลลัพธ์:</strong> คุณมักจะได้ "ดอย" ที่ยอดเป๊ะๆ เพราะคุณเข้าในจังหวะที่รายใหญ่กำลังขายทำกำไร<br>
+                    <strong>วิธีแก้:</strong> ท่องไว้เสมอว่า <em>"ตลาดมีรถไฟมาเรื่อยๆ ไม่ต้องรีบ"</em> ถ้าราคาไปไกลแล้ว ปล่อยมันไป รอ Setup ใหม่ที่สวยกว่าและปลอดภัยกว่าเสมอ การไม่เทรด = ไม่เสียเงิน</p>
+
+                    <h3>2. ศัตรูตัวร้าย: Revenge Trading (การเทรดเอาคืน)</h3>
+                    <p>เมื่อโดน Stop Loss แล้วรู้สึกโกรธ เสียหน้า เจ็บใจ อยากเอาเงินคืนเดี๋ยวนั้น จึงรีบเปิดออเดอร์ใหม่ทันที (แถมเบิ้ล Lot ด้วย!)<br>
+                    <strong>ผลลัพธ์:</strong> หายนะ! ยิ่งหัวร้อน ยิ่งขาดสติ ยิ่งมองไม่เห็นความเสี่ยง ยิ่งเสียหนักกว่าเดิมจนพอร์ตแตก<br>
+                    <strong>วิธีแก้:</strong> กฎเหล็ก <strong>"3 Strike Out"</strong> ถ้าแพ้ติดกัน 2-3 ไม้ ให้ปิดคอมพิวเตอร์ทันที! หยุดเทรด 24 ชั่วโมง ไปนอน ไปออกกำลังกาย ให้สมองเย็นลงก่อนค่อยกลับมา</p>
+
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>3. วินัยคืออิสรภาพ (Discipline equals Freedom)</h3>
+                    <p>เทรดเดอร์มืออาชีพทำตัวเหมือน "หุ่นยนต์" (Robot) ที่ไร้หัวใจ:<br>
+                    - เข้าออเดอร์เมื่อ "กราฟบอกให้เข้า" (ไม่ใช่ใจอยากเข้า)<br>
+                    - ยอมแพ้เมื่อ "กราฟบอกว่าผิดทาง" (ไม่ใช่เลื่อน SL หนี)<br>
+                    - ทำตามแผน (Trading Plan) ที่วางไว้อย่างเคร่งครัด ไม่ว่าจะเกิดอะไรขึ้น นี่คือหนทางเดียวสู่ความยั่งยืน</p>
+                `
+            },
+
+            // =========================================
+            // 8. Swing Trade Strategy
+            // =========================================
+            'Swing Trade': {
+                cat: 'Strategy', title: '🟣 Swing Trade Strategy: เทรดน้อยแต่กินคำใหญ่',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p><strong>Swing Trade</strong> คือสไตล์การเทรดที่ "Balance ชีวิต" ได้ดีที่สุด ไม่ต้องเฝ้าจอทั้งวัน เหมาะกับคนทำงานประจำ เน้นถือออเดอร์ระยะกลาง (2 วัน - 2 สัปดาห์) เพื่อกินคำใหญ่ตามเทรนด์ (Trend Following)</p>
+
+                    <h3>1. The Setup (สูตรสำเร็จ Swing Trade)</h3>
+                    <p>เราจะใช้โครงสร้าง <strong>Top-Down Analysis</strong> (วิเคราะห์จากบนลงล่าง):</p>
+                    <ul>
+                        <li><strong>Trend Locator (D1):</strong> เปิดกราฟ Day ดูเทรนด์หลักก่อนว่า "ลมพัดไปทางไหน" (ใช้ EMA 200 ช่วยดู) ถ้าเป็นขาขึ้น เราจะรอ Buy อย่างเดียว</li>
+                        <li><strong>Action Zone (H4):</strong> ย่อมาดู Timeframe H4 เพื่อหาจังหวะย่อตัว (Pullback) รอราคาถอยมาที่แนวรับสำคัญ (Support) หรือเส้น EMA 50 (Dynamic Support) ห้ามไล่ราคาเด็ดขาด!</li>
+                        <li><strong>Trigger (H1):</strong> ย่อมา H1 เพื่อหา "สัญญาณกลับตัว" เช่น Pin Bar หรือ Engulfing ที่แนวรับนั้น แล้วเข้าออเดอร์ทันที เพื่อให้ได้จุดเข้าที่คมกริบ</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. การบริหารจัดการออเดอร์ (Trade Management)</h3>
+                    <p>Swing Trade ต้อง "ใจนิ่ง" กราฟอาจจะมีการเหวี่ยงขึ้นลงระหว่างวัน อย่าตกใจปิดเร็วเกินไป</p>
+                    <ul>
+                        <li><strong>Stop Loss:</strong> วางไว้ใต้ Low ก่อนหน้า (เผื่อระยะ Spread 10-20 จุด)</li>
+                        <li><strong>Take Profit 1:</strong> เป้าแรกที่แนวต้านถัดไป (Previous High) เพื่อเก็บกำไรบางส่วนเข้ากระเป๋า (Lock Profit)</li>
+                        <li><strong>Trailing Stop:</strong> ส่วนที่เหลือ ให้เลื่อน SL มากันทุน (Break Even) หรือเลื่อนตามก้นกราฟไปเรื่อยๆ เพื่อกินเทรนด์ให้สุดคำ (Let Profits Run) จนกว่าเทรนด์จะเปลี่ยน</li>
+                    </ul>
+                `
+            },
+
+            // =========================================
+            // 9. Scalping Strategy
+            // =========================================
+            'Scalping Mastery': {
+                cat: 'Advanced', title: '⚡ Scalping Mastery: เทรดสั้น ฉบับมือสังหาร',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1535320903710-d9cf113d20c5?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p><strong>Scalping</strong> คือการ "ซุ่มยิง" (Sniper) เน้นเข้าเร็ว ออกเร็ว จบใน 5-15 นาที กินกำไรคำเล็กๆ แต่เน้นปริมาณและความแม่นยำสูง ไม่มีการถือข้ามคืน ไม่มีความเสี่ยงตอนนอน</p>
+
+                    <h3>1. ปัจจัยความสำเร็จของ Scalper</h3>
+                    <ul>
+                        <li><strong>Spread คือพระเจ้า:</strong> คุณต้องเลือกคู่เงินที่ Spread ต่ำที่สุดเท่านั้น (เช่น EURUSD, USDJPY, Gold) เพราะถ้า Spread กว้าง คุณจะขาดทุนตั้งแต่กดออเดอร์</li>
+                        <li><strong>Session Timing:</strong> ห้ามเทรดตอนตลาดวาย! ให้เทรดเฉพาะช่วงที่มี Volume สูงและกราฟวิ่งแรง คือช่วง <strong>London (14:00-16:00)</strong> และ <strong>New York (19:00-22:00)</strong> ช่วงอื่นกราฟไซด์เวย์ เสียเวลาเฝ้า</li>
+                        <li><strong>Focus:</strong> ต้องมีสมาธิสูงมาก ห้ามเทรดไปเล่นมือถือไป สายตาต้องจ้องกราฟตลอดเวลาที่ถือออเดอร์</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1640340434855-6084b1f4901c?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. ระบบเทรด 5 นาที (M5 Momentum Strategy)</h3>
+                    <p><strong>Setup:</strong> ใช้เส้น EMA 10 และ EMA 20 ในกราฟ 5 นาที</p>
+                    <ul>
+                        <li><strong>Buy Signal:</strong> เมื่อเส้น 10 ตัดเฉียงขึ้นเหนือเส้น 20 + แท่งเทียนปิดยืนเหนือเส้นทั้งสองได้ -> เข้า Buy ทันที เป้าหมาย 10-15 Pips (จบเร็ว)</li>
+                        <li><strong>Sell Signal:</strong> เมื่อเส้น 10 ตัดเฉียงลงต่ำกว่าเส้น 20 + แท่งเทียนปิดต่ำกว่าเส้นทั้งสองได้ -> เข้า Sell ทันที เป้าหมาย 10-15 Pips</li>
+                        <li><strong>Stop Loss:</strong> วางไว้ที่ High/Low ของแท่งก่อนหน้า ถ้าราคาย้อนกลับต้องคัททันที ห้ามยื้อ! ห้ามถัว!</li>
+                    </ul>
+                `
+            },
+
+            // =========================================
+            // 10. Volume Analysis
+            // =========================================
+            'Volume': {
+                cat: 'Advanced', title: 'Volume Analysis: แกะรอยเท้าเจ้ามือ',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>อินดิเคเตอร์ส่วนใหญ่คำนวณจากราคา (Price-based) ซึ่งมักจะช้า (Lagging) แต่ <strong>Volume (ปริมาณการซื้อขาย)</strong> คือ "เชื้อเพลิง" ของตลาด มันบอกถึงความตั้งใจจริง (Effort) ของผู้เล่นรายใหญ่ <strong>"ราคาหลอกกันได้ แต่ Volume หลอกไม่ได้"</strong></p>
+
+                    <h3>1. ยืนยันการ Breakout (ของจริง vs ของปลอม)</h3>
+                    <p>เมื่อราคาวิ่งทะลุแนวต้าน (Breakout) ให้เหลือบตาดูแท่ง Volume ด้านล่างทันที:</p>
+                    <ul>
+                        <li><strong>True Breakout (ของจริง):</strong> แท่งราคาพุ่งทะลุแนวต้าน พร้อมกับแท่ง Volume ที่พุ่งสูงปรี๊ด (High Volume) = รายใหญ่ใส่เงินเข้ามาดันราคาจริงๆ มีโอกาสไปต่อสูง -> <em>Follow Buy ได้เลย</em></li>
+                        <li><strong>False Breakout (ของปลอม):</strong> แท่งราคาพุ่งทะลุ แต่ Volume แห้งเหือด/เตี้ยติดดิน (Low Volume) = ไม่มีแรงหนุนจากรายใหญ่ เป็นแค่รายย่อยดันกันเอง เดี๋ยวราคาก็ร่วงกลับลงมา -> <em>ห้ามตาม! เผลอๆ สวน Sell ได้</em></li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1612178991541-b48cc8e92a4d?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. สัญญาณ Divergence (ความขัดแย้งของแรงซื้อขาย)</h3>
+                    <p>สัญญาณเตือนภัยล่วงหน้าก่อนกราฟจะกลับตัว (แม่นยำกว่า RSI Divergence):</p>
+                    <ul>
+                        <li><strong>Bearish Volume Divergence:</strong> ราคาทำ New High สูงขึ้นเรื่อยๆ แต่แท่ง Volume กลับลดลงเรื่อยๆ = ราคาขึ้นแต่ไม่มีคนอยากซื้อแล้ว (หมดแรง) เตรียมตัวร่วง</li>
+                        <li><strong>Bullish Volume Divergence:</strong> ราคาทำ New Low ต่ำลงเรื่อยๆ แต่แท่ง Volume กลับลดลง = ราคาลงแต่ไม่มีคนอยากขายแล้ว (หมดของ) เตรียมตัวดีดกลับ</li>
+                    </ul>
+                `
+            },
+
+            // =========================================
+            // 11. Crypto Basics
+            // =========================================
+            'Crypto Basics': {
+                cat: 'Cryptocurrency', title: '₿ Crypto 101: เข้าใจโลกสินทรัพย์ดิจิทัล',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>คริปโทเคอร์เรนซี (Cryptocurrency) ไม่ใช่แค่เงินสมมติ แต่มันคือการปฏิวัติระบบการเงินโลก (Financial Revolution) ด้วยเทคโนโลยี <strong>Blockchain</strong> ที่ตัดตัวกลาง (Decentralized) ทิ้งไป ทำให้ไม่มีใครสามารถบล็อกหรือยึดเงินเราได้</p>
+
+                    <h3>1. Bitcoin vs Altcoins</h3>
+                    <ul>
+                        <li><strong>Bitcoin (BTC):</strong> เปรียบเสมือน "ทองคำดิจิทัล" (Digital Gold) มีจำนวนจำกัดแค่ 21 ล้านเหรียญ เป็นพี่ใหญ่ที่กำหนดทิศทางตลาดทั้งหมด ความผันผวนต่ำสุดในกลุ่ม (แต่ก็ยังสูงกว่าหุ้น)</li>
+                        <li><strong>Altcoins (Alternative Coins):</strong> คือเหรียญอื่นๆ ที่เหลือ (เช่น Ethereum, Solana, DOGE) มักมีโปรเจกต์รองรับ ความผันผวนสูงมาก กำไรอาจเป็น 10-100 เท่า แต่ก็เสี่ยงขาดทุน 90% ได้เช่นกัน</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1518546305927-5a555bb7020d?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. วัฏจักร Bitcoin Halving (ลายแทงขุมทรัพย์)</h3>
+                    <p>Bitcoin มีกลไกพิเศษที่เรียกว่า <strong>Halving</strong> ซึ่งจะลดกำลังการผลิตลงครึ่งหนึ่งทุกๆ 4 ปี (ทำให้ของหายากขึ้น)<br>
+                    - ในอดีต หลังเกิด Halving ประมาณ 6-12 เดือน ราคา Bitcoin มักจะพุ่งทำ All Time High ใหม่เสมอ (Bull Run)<br>
+                    - นี่คือรอบใหญ่วัฏจักร 4 ปี ที่นักลงทุนทั่วโลกใช้ในการวางแผนสะสมความมั่งคั่ง</p>
+
+                    <h3>3. ความปลอดภัย (Security First)</h3>
+                    <p>กฎเหล็ก: <strong>"Not your keys, not your coins"</strong><br>
+                    ถ้าคุณฝากเงินไว้ในเว็บเทรด (Exchange) แปลว่าเงินนั้นยังไม่ใช่ของคุณ ถ้าเว็บปิดหนีหรือโดนแฮก เงินคุณหายหมด! ควรศึกษาการใช้ <strong>Hardware Wallet</strong> (เช่น Ledger, Trezor) เพื่อเก็บสินทรัพย์ด้วยตัวเอง 100%</p>
+                `
+            },
+
+            // =========================================
+            // 12. Chart Patterns
+            // =========================================
+            'Chart Patterns': {
+                cat: 'Technical', title: '📉 Chart Patterns Bible: คัมภีร์รูปแบบกราฟทำเงิน',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1565514020176-dbf2277f2412?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>กราฟไม่ได้วิ่งมั่วๆ แต่มันมักจะสร้าง "รูปแบบเรขาคณิต" สะสมพลังก่อนจะระเบิดราคาเสมอ ใครมองออกก่อนคนนั้นได้เปรียบ นี่คือ 3 รูปแบบระดับตำนานที่กองทุนใช้:</p>
+
+                    <h3>1. Head & Shoulders (หัวและไหล่ - กลับตัวลง)</h3>
+                    <p><strong>ลักษณะ:</strong> ราคามีไหล่ซ้าย, หัว (สูงที่สุด), และไหล่ขวา (ต่ำกว่าหัว) ดูเหมือนคนยักไหล่<br>
+                    <strong>จิตวิทยา:</strong> พยายามขึ้นไปทำ New High (หัว) แต่หมดแรง ร่วงลงมา แล้วพยายามขึ้นอีกรอบ (ไหล่ขวา) แต่ไม่ไหว แสดงว่าขาขึ้นจบแล้ว<br>
+                    <strong>จุดเข้า:</strong> รอราคาหลุดเส้นคอ (Neckline) แล้ว Sell ตามลงไป (หรือรอ Retest Neckline แล้ว Sell)</p>
+
+                    <img src="https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. Double Bottom (ตัว W - กลับตัวขึ้น)</h3>
+                    <p><strong>ลักษณะ:</strong> ราคาร่วงลงมาชนแนวรับ เด้งขึ้น แล้วร่วงลงมาชนแนวรับเดิมอีกครั้ง (ขาที่ 2) แล้วเด้งขึ้น เป็นรูปตัว W<br>
+                    <strong>จิตวิทยา:</strong> การทดสอบพื้น 2 ครั้งแล้วไม่หลุด แปลว่าพื้นแข็งมาก แรงขายหมดแล้ว เจ้ามือเริ่มเก็บของ<br>
+                    <strong>จุดเข้า:</strong> Buy เมื่อราคาเบรคแนวต้านตรงกลางตัว W ขึ้นไป</p>
+
+                    <h3>3. Triangles (สามเหลี่ยม - รอระเบิด)</h3>
+                    <p><strong>ลักษณะ:</strong> ราคาแกว่งตัวในกรอบแคบลงเรื่อยๆ (บีบอัด) เหมือนสปริงที่ถูกกด<br>
+                    <strong>จิตวิทยา:</strong> ตลาดกำลังลังเลและสะสมพลัง รอข่าวหรือปัจจัยใหม่มากระตุ้น<br>
+                    <strong>จุดเข้า:</strong> ห้ามเดา! รอให้ระเบิด (Breakout) ออกจากสามเหลี่ยมไปทางไหน ให้ตามไปทางนั้น (มักจะพุ่งแรงมาก)</p>
+                `
+            },
+
+            // =========================================
+            // 13. Secret Indicators
+            // =========================================
+            'Secret Indicators': {
+                cat: 'Institutional', title: '🤫 Secret Indicators: เครื่องมือลับจับเท็จกราฟ',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>มือใหม่ดูแต่อินดิเคเตอร์พื้นฐาน (Overbought/Oversold) แต่มือโปรจะดู "สัญญาณขัดแย้ง" เพื่อจับเท็จกราฟ เทคนิคนี้เรียกว่า <strong>Divergence</strong> ซึ่งมีความแม่นยำสูงมากในการหาจุดกลับตัวที่คนส่วนใหญ่มองไม่เห็น</p>
+
+                    <h3>1. Regular Divergence (การสวนเทรนด์)</h3>
+                    <p>สัญญาณว่าเทรนด์ปัจจุบันกำลังจะจบ:</p>
+                    <ul>
+                        <li><strong>Bearish Divergence (เตรียมลง):</strong> กราฟราคาทำ New High (สูงขึ้น) แต่ RSI ทำ Lower High (ต่ำลง) -> แปลว่าราคาขึ้นแบบไม่มีแรง (Momentum หาย) รายใหญ่เลิกดันแล้ว เตรียมทุบ</li>
+                        <li><strong>Bullish Divergence (เตรียมขึ้น):</strong> กราฟราคาทำ New Low (ต่ำลง) แต่ RSI ทำ Higher Low (สูงขึ้น) -> แปลว่าราคาลงแบบฝืนๆ (ขายไม่ลงแล้ว) รายใหญ่เริ่มเก็บของ เตรียมดีด</li>
+                    </ul>
+
+                    <img src="https://images.unsplash.com/photo-1535320903710-d9cf113d20c5?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. Hidden Divergence (การตามเทรนด์)</h3>
+                    <p>อันนี้หายากแต่กำไรคำโต (High Risk Reward) ใช้สำหรับเข้าออเดอร์ตามเทรนด์เดิม:</p>
+                    <ul>
+                        <li><strong>Hidden Bullish:</strong> เทรนด์ขาขึ้น ราคาย่อตัวลงมา (Low สูงขึ้น) แต่ RSI ลงไปลึกกว่าเดิม (Low ต่ำลง) -> แปลว่าย่อหลอกๆ (Oversold หลอกๆ) เตรียมไปต่อแรงๆ -> <em>Buy!</em></li>
+                        <li><strong>Hidden Bearish:</strong> เทรนด์ขาลง ราคาดีดขึ้นมา (High ต่ำลง) แต่ RSI ขึ้นไปสูงกว่าเดิม (High สูงขึ้น) -> แปลว่าเด้งหลอกๆ (Overbought หลอกๆ) เตรียมลงต่อ -> <em>Sell!</em></li>
+                    </ul>
+                `
+            },
+
+            // =========================================
+            // 14. Advanced Price Action (SMC)
+            // =========================================
+            'Advanced Price Action': {
+                cat: 'Premium', title: '👑 Advanced Price Action (SMC Concept)',
+                content: `
+                    <img src="https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin-bottom:20px; border:1px solid #334155;">
+                    <p>ยินดีต้อนรับสู่โลกของ <strong>"Smart Money Concepts (SMC)"</strong> หรือการแกะรอยเท้าธนาคารและสถาบันการเงิน (Institutional Trading) นี่คือวิธีที่รายใหญ่ใช้กินเงินรายย่อย</p>
+
+                    <h3>1. Liquidity Grab (การล่าสภาพคล่อง)</h3>
+                    <p>รายใหญ่เทรดด้วยเงินมหาศาล เขาไม่สามารถกดซื้อขายได้ทันทีเพราะไม่มีคนรับของ เขาจึงต้อง "สร้างกับดัก" เพื่อล่อให้รายย่อยวาง Stop Loss ไว้เป็นกลุ่มก้อน (Liquidity Pool)<br>
+                    <strong>ท่าไม้ตาย Stop Hunt:</strong> ดันราคาไปกิน SL ของรายย่อยที่วางไว้เหนือแนวต้านหรือใต้แนวรับ (เพื่อให้ได้ของครบ) แล้วค่อยกระชากกราฟไปในทิศทางที่ต้องการจริงๆ</p>
+
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80" style="width:100%; border-radius:10px; margin:20px 0; border:1px solid #334155;">
+
+                    <h3>2. Imbalance / FVG (Fair Value Gap)</h3>
+                    <p>เมื่อรายใหญ่อัดเงินเข้ามาตูมเดียว กราฟจะพุ่งเป็นแท่งยาวๆ โดยไม่มีไส้ ทิ้ง "ช่องว่าง" (Gap) เอาไว้ ตลาดมีธรรมชาติที่ต้องกลับมา "ถม" ช่องว่างนี้เสมอ (Rebalance)<br>
+                    <strong>วิธีเทรด:</strong> อย่าไล่ราคาตอนพุ่ง! ให้ตีกล่องบริเวณ Gap รอไว้ เมื่อราคาย้อนกลับมาปิด Gap นี้ มักจะเด้งกลับอย่างแม่นยำ เป็นจุดเข้าที่ R:R สวยที่สุด</p>
+
+                    <h3>3. BOS (Break of Structure)</h3>
+                    <p>การยืนยันเทรนด์ที่แท้จริงต้องดูการ "ทำลายโครงสร้าง" ถ้าเป็นขาขึ้น ราคาต้องชนะ High เดิมให้ได้เนื้อเทียนปิดเหนือชัดเจน (BOS) ถ้าทำไม่ได้ อาจจะเป็นแค่การกวาด Liquidity แล้วกลับตัว</p>
+                `
+            }
+        };
+
+        // --- 2. ฟังก์ชันเปิดห้องเรียน ---
+        function startLesson(topic) {
+            console.log("Opening:", topic);
+            let key = topic;
+            let t = topic.toLowerCase(); 
+
+            // ระบบจับคู่
+            if (t.includes('จิตวิทยา') || t.includes('psychology')) key = 'Psychology';
+            else if (t.includes('swing')) key = 'Swing Trade';
+            else if (t.includes('money') || t.includes('เงิน')) key = 'Money Management';
+            else if (t.includes('scalping')) key = 'Scalping Mastery';
+            else if (t.includes('chart') || t.includes('กราฟ')) key = 'Chart Patterns';  
+            else if (t.includes('crypto') || t.includes('คริปโต')) key = 'Crypto Basics'; 
+            else if (t.includes('indicator') || t.includes('อินดิเคเตอร์')) key = 'Secret Indicators'; 
+
+            const data = lessonData[key];
+
+            if (data) {
+                document.getElementById('lesson-category').innerText = data.cat;
+                document.getElementById('lesson-title').innerText = data.title;
+                document.getElementById('lesson-body').innerHTML = data.content;
+                document.getElementById('lesson-room').style.display = 'block';
+                window.scrollTo(0,0);
+            } else {
+                alert(`🚧 กำลังเขียนเนื้อหาครับ (Topic: ${topic})`);
+            }
+        }
+
+        // --- 3. ฟังก์ชันอื่นๆ ---
+        function closeLesson() {
+            document.getElementById('lesson-room').style.display = 'none';
+        }
+        
+        function switchTab(shortName, element) {
+            console.log("Switching to:", shortName);
+
+            // 1. ซ่อนทุกหน้า
+            const allSections = document.querySelectorAll('.section-view');
+            allSections.forEach(section => {
+                section.style.display = 'none'; 
+                section.classList.remove('active');
+            });
+
+            // 2. รีเซ็ตปุ่มเมนู
+            const allButtons = document.querySelectorAll('.menu-item');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 3. เปิดหน้าใหม่
+            const targetId = shortName + '-view';
+            const targetView = document.getElementById(targetId);
+
+            if (targetView) {
+                targetView.style.display = 'block'; 
+                targetView.classList.add('active');
+                window.scrollTo(0,0); 
+            } else {
+                console.error("❌ หาห้องไม่เจอ: " + targetId);
+            }
+
+            // 4. ปุ่มเรืองแสง
+            if (element) {
+                element.classList.add('active');
+            }
+            
+            // 5. ปิด Sidebar มือถือ
+            if (window.innerWidth <= 768 && typeof toggleSidebar === 'function') {
+                toggleSidebar();
+            }
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+        
+        function logout() {
+            if(confirm('ยืนยันการออกจากระบบ?')) {
+                window.location.reload();
+            }
+        }
+
+        // --- 4. ระบบวิเคราะห์กราฟ ---
+        function setupImagePreview(inputId, imgId, placeholderId) {
+            const input = document.getElementById(inputId);
+            if(!input) return;
+
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.getElementById(imgId);
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                        document.getElementById(placeholderId).style.display = 'none';
+                    }
+                    reader.readAsDataURL(file); 
+                }
+async function analyze(type) {
+    const prefix = type === 'swing' ? 'sw' : 'sc';
+    const fileInput = document.getElementById(prefix + '-file');
+    const tf = document.getElementById(prefix + '-tf').value;
+    
+    // 🚩 วางบรรทัดนี้เพิ่มเข้าไปครับ (ดึงค่าจาก Dropdown หน้า Settings)
+    const selectedModel = document.getElementById('ai-model-select').value; 
+
+    // ... โค้ดส่วนอื่นๆ ที่บอสมีอยู่แล้ว ...
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('type', type);
+    formData.append('tf', tf);
+    
+    // 🚩 วางบรรทัดนี้เพิ่มเข้าไปด้วยครับ (ส่งชื่อรุ่นไปหา Python)
+    formData.append('model_name', selectedModel); 
+
+    // ... บรรทัด fetch ด้านล่างคงเดิม ...
+}
+            });
+        }
+
+        setupImagePreview('sw-file', 'sw-preview', 'sw-placeholder');
+
+       document.getElementById(prefix + '-signal-box').style.color = 'var(--db-text-main)'; 
+document.getElementById(prefix + '-res').innerHTML = '🤖 ระบบกำลังเตรียมข้อมูล...';
+
+        // เพิ่มเข้าไปต้นๆ ฟังก์ชัน analyze
+async function analyze(type) {
+    const prefix = type === 'swing' ? 'sw' : 'sc';
+    const fileInput = document.getElementById(prefix + '-file');
+    const tf = document.getElementById(prefix + '-tf').value;
+    
+    // 🚩 ดึงค่ารุ่น AI ที่บอสเลือกจากหน้า Settings
+    const selectedModel = document.getElementById('ai-model-select').value; 
+
+    if (!fileInput.files[0]) return alert("⚠️ อย่าลืมเลือกรูปกราฟก่อนนะบอส!");
+
+    const signalBox = document.getElementById(prefix + '-signal-box');
+    const resBox = document.getElementById(prefix + '-res');
+    const probBox = document.getElementById(prefix + '-prob-box');
+    const container = document.getElementById(prefix + '-result-container');
+
+    container.style.display = 'block';
+    signalBox.innerText = "⏳ กำลังคำนวณ...";
+    resBox.innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">🤖 AI กำลังประมวลผลด้วย ${selectedModel}...</div>`;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('type', type);
+    formData.append('tf', tf);
+    formData.append('model_name', selectedModel); 
+
+    try {
+        const response = await fetch('https://eden24k-ai-forex.onrender.com/api/analyze', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        // แสดงผลลัพธ์หลัก
+        signalBox.innerText = data.signal || "WAITING";
+        probBox.innerHTML = `Confidence: ${data.confidence || 0}%`;
+
+        // จัดการแสดงผล Advice List สวยๆ
+        let adviceHtml = '';
+        if (data.advice_list) {
+            data.advice_list.forEach(item => {
+                adviceHtml += `
+                    <div style="background:white; padding:12px 15px; border-radius:10px; margin-top:10px; border-left:4px solid #6200ea; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <span style="font-size:14px; color:#334155; line-height:1.5;">💡 ${item}</span>
+                    </div>`;
+            });
+        } else {
+            adviceHtml = data.advice || "ไม่พบข้อมูลวิเคราะห์";
+        }
+        
+        resBox.innerHTML = adviceHtml;
+        
+        // อัปเดตตารางประวัติ
+        if (typeof updateHistoryTable === "function") updateHistoryTable();
+
+    } catch (err) {
+        console.error(err);
+        signalBox.innerText = "❌ ERROR";
+        resBox.innerHTML = `<div style="color:red; padding:10px;">เกิดข้อผิดพลาด: ${err.message}</div>`;
+    }
+}
+
+        // --- 5. ฟังก์ชันคำนวณ Lot ---
+        function calculateLot(prefix) {
+            const balance = parseFloat(document.getElementById(prefix + '-balance').value) || 0;
+            const risk = parseFloat(document.getElementById(prefix + '-risk').value) || 0;
+            const sl = parseFloat(document.getElementById(prefix + '-sl').value) || 0;
+
+            const riskAmount = balance * (risk / 100);
+            let lotSize = 0;
+
+            if (sl > 0) {
+                lotSize = riskAmount / sl;
+            }
+
+            document.getElementById(prefix + '-lot-result').innerText = lotSize.toFixed(2) + " Lot";
+        }        
+
+        // --- 6. ฟังก์ชันดึงประวัติ (History) ---
+        async function updateHistoryTable() {
+            try {
+                // 👇 เปลี่ยนตรงนี้: จาก localhost เป็น Render URL ของบอส
+                const response = await fetch('https://eden24k-ai-forex.onrender.com/api/history');
+                const data = await response.json();
+                const tbody = document.getElementById('history-body');
+                
+                if (!tbody) return;
+                tbody.innerHTML = ''; 
+
+                data.history.forEach(item => {
+                    let color = '#f1c40f'; // WAIT
+                    if (item.Signal.includes('BUY')) color = '#2ecc71';
+                    if (item.Signal.includes('SELL')) color = '#e74c3c';
+                    
+                    tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid #f8fafc; font-size: 14px;">
+                            <td style="padding: 15px; color: #94a3b8;">${item.Timestamp}</td>
+                            <td style="font-weight: bold;">${item.Type} (${item.Timeframe})</td>
+                            <td style="color: ${color}; font-weight: bold;">${item.Signal}</td>
+                            <td><span style="background: #f1f5f9; padding: 4px 10px; border-radius: 20px;">${item.Confidence}%</span></td>
+                            <td style="color: #64748b; font-size: 13px;">${item.Advice_Summary}</td>
+                        </tr>
+                    `;
+                });
+                
+                const totalElem = document.getElementById('hist-total');
+                if(totalElem) totalElem.innerText = data.history.length;
+
+            } catch (error) {
+                console.error('ไม่สามารถโหลดประวัติได้:', error);
+            }
+        }
+        // --- ฟังก์ชันเปลี่ยนธีม (Dark Mode Switch) ---
+        function toggleTheme() {
+            const body = document.body;
+            // เช็คว่ามี attribute data-theme="dark" อยู่ไหม
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme'); // ลบออก = กลับเป็นสีขาว
+            } else {
+                body.setAttribute('data-theme', 'dark'); // ใส่เข้าไป = เป็นสีดำ
+            }
+        }
+
+        // เริ่มต้นทำงาน
+        updateHistoryTable();
+        
+    // --- ฟังก์ชันเปลี่ยนธีม (Dark Mode Switch) ---
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('themeBtn');
+        
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme'); // กลับเป็นโหมดขาว
+            btn.innerHTML = '🌙'; // ไอคอนพระจันทร์
+            btn.style.background = '#6200ea'; // สีม่วง
+        } else {
+            body.setAttribute('data-theme', 'dark'); // เปิดโหมดมืด
+            btn.innerHTML = '☀️'; // ไอคอนพระอาทิตย์
+            btn.style.background = '#f59e0b'; // สีส้ม
+        }
+    }
+    
+    // --- ⏰ ระบบนาฬิกา Real-time (Pro Version) ---
+    function startRealtimeClock() {
+        const dateElement = document.getElementById('live-clock-date');
+        const timeElement = document.getElementById('live-clock-time');
+        
+        // ถ้าไม่อยู่หน้า Dashboard ไม่ต้องรันเพื่อประหยัดทรัพยากร
+        if (!dateElement || !timeElement) return;
+
+        function update() {
+            const now = new Date();
+            
+            // 1. แปลงวัน/เดือนเป็นภาษาไทย
+            const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            
+            const dayName = days[now.getDay()];
+            const dayNum = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear(); // ค.ศ. ตามที่บอสต้องการ (2026)
+
+            // 2. จัดรูปแบบเวลา (เติม 0 ข้างหน้าถ้าต่ำกว่า 10)
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+
+            // 3. แสดงผลลงหน้าจอ
+            // รูปแบบ: "วัน อาทิตย์ที่ 4 มกราคม 2026"
+            dateElement.innerText = `วัน ${dayName}ที่ ${dayNum} ${monthName} ${year}`;
+            
+            // รูปแบบ: "เวลา 19:21:31 น." (เติมคำว่า เวลา และ น. ให้ด้วย)
+            timeElement.innerText = `เวลา ${h}:${m}:${s} น.`;
+        }
+
+        // อัปเดตทันทีและทำซ้ำทุก 1 วินาที
+        update();
+        setInterval(update, 1000);
+    }
+
+    // สั่งรันนาฬิกาทันทีเมื่อโหลดเว็บ
+    document.addEventListener('DOMContentLoaded', startRealtimeClock);
+    // (Backup) เผื่อบางที DOMContentLoaded ทำงานไปแล้ว
+    startRealtimeClock();
+    </script>
+<button class="theme-float-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+</body>
+</html>
