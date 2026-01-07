@@ -1770,54 +1770,35 @@ async function submitSupport(event) {
             document.getElementById('lesson-room').style.display = 'none';
         }
         
-        function switchTab(shortName, element) {
-            console.log("Switching to:", shortName);
-
-            // 1. ซ่อนทุกหน้า
-            const allSections = document.querySelectorAll('.section-view');
-            allSections.forEach(section => {
-                section.style.display = 'none'; 
-                section.classList.remove('active');
-            });
-
-            // 2. รีเซ็ตปุ่มเมนู
-            const allButtons = document.querySelectorAll('.menu-item');
-            allButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // 3. เปิดหน้าใหม่
-            const targetId = shortName + '-view';
-            const targetView = document.getElementById(targetId);
-
-            if (targetView) {
-                targetView.style.display = 'block'; 
-                targetView.classList.add('active');
-                window.scrollTo(0,0); 
-            } else {
-                console.error("❌ หาห้องไม่เจอ: " + targetId);
-            }
-
-            // 4. ปุ่มเรืองแสง
-            if (element) {
-                element.classList.add('active');
-            }
-            
-            // 5. ปิด Sidebar มือถือ
-            if (window.innerWidth <= 768 && typeof toggleSidebar === 'function') {
-                toggleSidebar();
-            }
-        }
-
-        function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('active');
-        }
+        function switchTab(viewId, element) {
+        // รายชื่อห้องทั้งหมดที่มีในบ้าน (เช็คแล้วว่ามีจริง)
+        const views = ['dashboard', 'swing', 'scalping', 'history', 'learning', 'support', 'settings'];
         
-        function logout() {
-            if(confirm('ยืนยันการออกจากระบบ?')) {
-                window.location.reload();
+        // 1. สั่งปิดไฟทุกห้องก่อน
+        views.forEach(v => {
+            const el = document.getElementById(v + '-view');
+            if (el) { // เช็คก่อนว่ามีห้องไหม (กัน Error)
+                el.style.display = 'none'; 
             }
+        });
+
+        // 2. เปิดไฟห้องที่เลือก
+        const target = document.getElementById(viewId + '-view');
+        if (target) {
+            target.style.display = 'block'; // หรือ 'flex' ตามดีไซน์เดิม
+            window.scrollTo(0, 0); // เลื่อนขึ้นบนสุด
         }
+
+        // 3. เปลี่ยนสีปุ่มเมนู
+        if (element) {
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                item.style.background = 'transparent';
+            });
+            element.classList.add('active');
+            element.style.background = 'linear-gradient(90deg, #6200ea, #9044ff)';
+        }
+    }
 
         // --- 4. ระบบวิเคราะห์กราฟ ---
         function setupImagePreview(inputId, imgId, placeholderId) {
