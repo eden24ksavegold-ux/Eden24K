@@ -604,7 +604,7 @@
                         คลิกเพื่ออัปโหลดกราฟ 1M-15M
                     </div>
                 </label>
-                <input type="file" id="sc-file" hidden accept="image/*" />
+                <input type="file" id="sc-file" hidden accept="image/*" onchange="previewImage(event, 'sc-preview', 'sc-placeholder')">
                 
                 <div class="control-bar">
                     <select id="sc-tf" class="tf-select-new">
@@ -1206,6 +1206,64 @@
                 promoBox.style.display = 'block';
             }
         }
+        // ฟังก์ชันโชว์รูปตัวอย่าง (Preview Image)
+    function previewImage(event, imgId, placeholderId) {
+        const input = event.target;
+        const file = input.files[0];
+        
+        if (file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // 1. เอารูปไปใส่ใน tag <img>
+                const imgElement = document.getElementById(imgId);
+                imgElement.src = e.target.result;
+                imgElement.style.display = 'block'; // โชว์รูป
+                imgElement.style.maxHeight = '100%'; 
+                
+                // 2. ซ่อนข้อความ "คลิกเพื่ออัปโหลด"
+                const placeholderElement = document.getElementById(placeholderId);
+                if (placeholderElement) {
+                    placeholderElement.style.display = 'none';
+                }
+            }
+            
+            reader.readAsDataURL(file); // เริ่มอ่านไฟล์
+        }
+    }
+    // ฟังก์ชันวิเคราะห์กราฟ (จำลองการทำงาน AI)
+    function analyzeGraph(mode) {
+        // 1. เช็คว่าบอสเลือกไฟล์หรือยัง?
+        let fileId = (mode === 'swing') ? 'sw-file' : 'sc-file';
+        let fileInput = document.getElementById(fileId);
+
+        if (!fileInput.files.length) {
+            alert('⚠️ บอสครับ! ช่วยอัปโหลดรูปกราฟก่อนกดวิเคราะห์นะครับ 📸');
+            return;
+        }
+
+        // 2. เปลี่ยนปุ่มเป็น "กำลังโหลด..."
+        let btn = event.target; // ปุ่มที่ถูกกด
+        let oldText = btn.innerText;
+        btn.innerText = '🧠 AI กำลังคิด...';
+        btn.style.opacity = '0.7';
+
+        // 3. จำลองการวิเคราะห์ (รอ 2 วินาที)
+        setTimeout(function() {
+            // คืนค่าปุ่มเดิม
+            btn.innerText = oldText;
+            btn.style.opacity = '1';
+
+            // 4. แสดงผลลัพธ์ (Demo Mode)
+            // *หมายเหตุ: เนื่องจาก Netlify เป็นเว็บ Static เราจะโชว์ผลจำลองก่อนนะครับ
+            let resultText = (mode === 'swing') 
+                ? '✅ สัญญาณ Swing: แนวโน้มขาขึ้น (Uptrend) \nแนะนำ: รอจังหวะย่อตัวแล้วเข้า Buy (Buy on Dip)' 
+                : '⚡ สัญญาณ Scalping: เกิดแท่งเทียนกลับตัว \nแนะนำ: เข้าทำกำไรสั้นๆ 10-20 จุด';
+            
+            alert(resultText); // เด้งแจ้งเตือนผลลัพธ์
+
+        }, 2000); // รอ 2 วินาที
+    }
 
         function processPayment(type) {
             const btn = event.target;
