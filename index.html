@@ -513,82 +513,78 @@
                 </form>
             </div></div></div></div>
             <div id="swing-view" class="section-view">
-        <div class="trade-header-title">🟣 การซื้อขายแบบสวิงเทรด (Swing Trade)</div>
-        <p class="trade-desc">วิเคราะห์กราฟเพื่อหาโอกาสในการซื้อขายในระยะเวลาหลายวันถึงหลายสัปดาห์</p>
+    <div class="trade-header-title">📈 การซื้อขายแบบสวิงเทรด (Swing Trade)</div>
+    <p class="trade-desc">วิเคราะห์กราฟเพื่อหาโอกาสในการซื้อขายในระยะเวลาหลายวันถึงหลายสัปดาห์</p>
+
+    <div class="warning-box" style="background: #f0f9ff; border-color: #bae6fd;">
+        <div class="warning-icon" style="color: #0284c7;">⚡</div>
+        <p class="warning-text" style="color: #075985;"><strong>สำคัญ:</strong> การวิเคราะห์ทั้งหมดมีวัตถุประสงค์เพื่อการศึกษาเท่านั้น</p>
+    </div>
+
+    <div class="trade-layout-grid">
         
-        <div class="warning-box">
-            <div class="warning-icon">⚠️</div>
-            <p class="warning-text"><strong>สำคัญ:</strong> การวิเคราะห์ทั้งหมดมีวัตถุประสงค์เพื่อการศึกษาเท่านั้น</p>
+        <div class="chart-container-new">
+            <label for="sw-file" class="upload-zone" style="min-height: 450px; background: #0f172a;">
+                <img id="sw-preview" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+                <div id="sw-placeholder" style="color: #94a3b8; text-align:center;">
+                    <div style="font-size:40px; margin-bottom:10px;">📊</div>
+                    คลิกเพื่ออัปโหลดรูปกราฟของคุณ
+                </div>
+            </label>
+            <input type="file" id="sw-file" hidden accept="image/*" onchange="previewImage(event, 'sw-preview', 'sw-placeholder')">
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <select id="sw-timeframe" class="form-select" style="flex:1; background:#1e293b; color:white; border:1px solid #334155; padding:10px; border-radius:8px;">
+                    <option value="H4">4 ชั่วโมง (4 Hours)</option>
+                    <option value="D1">1 วัน (Day)</option>
+                </select>
+                <button onclick="analyzeGraph('swing')" class="btn-analyze" style="flex:1; background: linear-gradient(135deg, #6200ea, #9044ff); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                    วิเคราะห์กราฟ 🚀
+                </button>
+            </div>
         </div>
 
-        <div class="trade-layout-grid">
-            <div class="chart-container-new">
-                <label for="sw-file" class="upload-zone" style="min-height: 450px; background:#0f172a;">
-                    <img id="sw-preview" style="display:none; max-width:100%; max-height:100%; object-fit:contain;" />
-                    <div id="sw-placeholder" style="color:#94a3b8; text-align:center;">
-                        <div style="font-size:40px; margin-bottom:10px;">📊</div>
-                        คลิกเพื่ออัปโหลดรูปกราฟของคุณ
-                    </div>
-                </label>
-                <input type="file" id="sw-file" hidden accept="image/*" />
-                
-                <div class="control-bar">
-                    <select id="sw-tf" class="tf-select-new">
-                        <option value="1H">1 ชั่วโมง (1 Hours)</option>
-                        <option value="4H">4 ชั่วโมง (4 Hours)</option>
-                        <option value="1D">รายวัน (Daily)</option>
-                        <option value="1W">รายสัปดาห์ (Weekly)</option>
-                    </select>
-                    <button class="analyze-btn-new" onclick="analyze('swing')">วิเคราะห์แผนภูมิ 🚀</button>
+        <div class="guide-box">
+            <h4 class="calc-title" style="color:#581c87; margin-bottom:10px;">🧮 Swing Calculator</h4>
+            
+            <div class="calc-field">
+                <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:5px;">เงินทุน ($)</label>
+                <input type="number" id="sw-capital" class="calc-input" value="1000" oninput="calculateLot('sw')">
+            </div>
+
+            <div class="calc-field">
+                <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:5px;">ความเสี่ยง (%)</label>
+                <input type="number" id="sw-risk" class="calc-input" value="1" oninput="calculateLot('sw')">
+            </div>
+
+            <div class="calc-field">
+                <label style="display:block; font-size:12px; font-weight:600; color:#64748b; margin-bottom:5px;">ระยะ SL (Points)</label>
+                <input type="number" id="sw-sl" class="calc-input" placeholder="เช่น 200, 500" oninput="calculateLot('sw')">
+            </div>
+
+            <div class="calc-result-row">
+                <span style="font-size:12px; color:#64748b;">ขนาด Lot ที่แนะนำ:</span>
+                <div id="sw-lot-result" style="font-weight:bold; font-size:24px; color:#7c3aed;">0.00 Lot</div>
+            </div>
+
+            <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:15px;">
+                <h4 style="font-size:14px; color:#334155; margin-bottom:10px;">ℹ️ คู่มือ</h4>
+                <div style="display:flex; gap:10px; margin-bottom:5px; font-size:12px; color:#64748b;">
+                    <div style="background:#f1f5f9; width:20px; height:20px; border-radius:50%; text-align:center; line-height:20px;">1</div>
+                    อัปโหลดภาพกราฟ (TF H4/D1)
                 </div>
-
-               <div id="sw-result-container" style="display:none; margin-top:25px; background:var(--sw-res-bg, #f8fafc); border-radius:15px; padding:30px; text-align:center; border: 1px solid rgba(0,0,0,0.05);">
-    <style>
-        /* บังคับสีตัวหนังสือให้ชัดเจนในทุกโหมด */
-        .res-title-fix { color: #1e293b; font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        #sw-signal-box { color: #1e293b; font-size: 48px; font-weight: 800; margin: 10px 0; }
-        #sw-prob-box { color: #64748b; font-size: 18px; font-weight: 600; }
-        #sw-res { margin-top: 15px; font-size: 14px; color: #334155; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.5); padding: 15px; border-radius: 10px; }
-
-        /* 🌙 ปรับสีสำหรับโหมดมืด */
-        body[data-theme="dark"] #sw-result-container { --sw-res-bg: #1e293b; border-color: rgba(255,255,255,0.1); }
-        body[data-theme="dark"] .res-title-fix { color: #f8fafc; }
-        body[data-theme="dark"] #sw-signal-box { color: #fbbf24 !important; } /* สีส้มทองเด่นๆ */
-        body[data-theme="dark"] #sw-prob-box { color: #cbd5e1; }
-        body[data-theme="dark"] #sw-res { color: #e2e8f0; background: rgba(0,0,0,0.2); }
-    </style>
-
-    <div class="res-title-fix">⚡ ผลการวิเคราะห์ด่วน</div>
-    <div id="sw-signal-box" class="signal-box">WAITING...</div>
-    <div id="sw-prob-box" class="prob-box">Confidence: 0%</div>
-    <div id="sw-res">รายละเอียดแผนการเทรดจะปรากฏที่นี่...</div>
-</div>
-
-            <div class="side-panel">
-                <div class="calc-card">
-                    <h4 class="calc-title">🧮 เครื่องคำนวณก่อนเทรด</h4>
-                    <p style="font-size:11px; color:#7c3aed; margin-bottom:15px;">สูตร: (ทุน x %เสี่ยง) / ระยะ SL</p>
-                    <label class="calc-label">ยอดคงเหลือในบัญชี ($)</label>
-                    <input type="number" id="sw-balance" class="calc-input" value="1000" oninput="calculateLot('sw')">
-                    <label class="calc-label">ความเสี่ยง (%)</label>
-                    <input type="number" id="sw-risk" class="calc-input" value="1" oninput="calculateLot('sw')">
-                    <label class="calc-label">ระยะ SL (Points)</label>
-                    <input type="number" id="sw-sl" class="calc-input" placeholder="เช่น 200, 500" oninput="calculateLot('sw')">
-                    <div class="calc-result-row">
-                        <span style="font-size:12px; color:#64748b;">ขนาด Lot ที่แนะนำ:</span>
-                        <div id="sw-lot-result" style="font-weight:bold; font-size:24px; color:#7c3aed;">0.00 Lot</div>
-                    </div>
+                <div style="display:flex; gap:10px; margin-bottom:5px; font-size:12px; color:#64748b;">
+                    <div style="background:#f1f5f9; width:20px; height:20px; border-radius:50%; text-align:center; line-height:20px;">2</div>
+                    กดปุ่ม "วิเคราะห์กราฟ"
                 </div>
-                <div class="guide-box">
-                    <h4 class="calc-title" style="color:#581c87; margin-bottom:10px;">ℹ️ คู่มือ</h4>
-                    <div class="guide-item"><div class="guide-icon">1</div><p class="guide-text">อัปโหลดภาพกราฟ</p></div>
-                    <div class="guide-item"><div class="guide-icon">2</div><p class="guide-text">กดปุ่มวิเคราะห์</p></div>
-                    <div class="guide-item"><div class="guide-icon">3</div><p class="guide-text">ดูผลลัพธ์ด้านซ้าย</p></div>
+                <div style="display:flex; gap:10px; font-size:12px; color:#64748b;">
+                    <div style="background:#f1f5f9; width:20px; height:20px; border-radius:50%; text-align:center; line-height:20px;">3</div>
+                    ดูผลลัพธ์ & ตั้ง SL ทันที
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
+    </div> </div>
     
     <div id="scalping-view" class="section-view">
         <div class="trade-header-title">🔵 เก็งกำไรระยะสั้น (Scalping)</div>
